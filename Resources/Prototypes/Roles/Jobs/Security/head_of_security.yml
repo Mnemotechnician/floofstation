@@ -4,9 +4,9 @@
   description: job-description-hos
   playTimeTracker: JobHeadOfSecurity
   requirements:
-    - !type:DepartmentTimeRequirement
+    - !type:CharacterDepartmentTimeRequirement
       department: Security
-      time: 3600 # 60 hrs
+      min: 3600 # 60 hrs
   weight: 10
   startingGear: HoSGear
   icon: "JobIconHeadOfSecurity"
@@ -31,10 +31,6 @@
   - !type:AddComponentSpecial
     components:
       - type: CommandStaff
-  - !type:AddComponentSpecial
-    components:
-    - type: PsionicBonusChance #Nyano - Summary: makes it more likely to become psionic.
-      flatBonus: 0.025
 
 - type: startingGear
   id: HoSGear

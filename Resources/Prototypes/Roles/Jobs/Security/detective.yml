@@ -4,7 +4,7 @@
   description: job-description-detective
   playTimeTracker: JobDetective
   requirements:
-  - !type:OverallPlaytimeRequirement
+  - !type:CharacterOverallPlaytimeRequirement
     time: 3600 # DeltaV - 1 hour
   startingGear: DetectiveGear
   icon: "JobIconDetective"
@@ -16,6 +16,8 @@
   - Maintenance
   - Service
   - Detective
+  - External
+  - Cryogenics
   special:
   - !type:AddImplantSpecial
     implants: [ MindShieldImplant ]

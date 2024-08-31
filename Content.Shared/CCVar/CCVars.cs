@@ -1,3 +1,4 @@
+using Content.Shared.Supermatter.Components;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 
@@ -257,25 +258,6 @@ namespace Content.Shared.CCVar
             GameCryoSleepRejoining = CVarDef.Create("game.cryo_sleep_rejoining", false, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
-        ///     Whether a random position offset will be applied to the station on roundstart.
-        /// </summary>
-        public static readonly CVarDef<bool> StationOffset =
-            CVarDef.Create("game.station_offset", true);
-
-        /// <summary>
-        /// When the default blueprint is loaded what is the maximum amount it can be offset from 0,0.
-        /// Does nothing without <see cref="StationOffset"/> as true.
-        /// </summary>
-        public static readonly CVarDef<float> MaxStationOffset =
-            CVarDef.Create("game.maxstationoffset", 1000.0f);
-
-        /// <summary>
-        ///     Whether a random rotation will be applied to the station on roundstart.
-        /// </summary>
-        public static readonly CVarDef<bool> StationRotation =
-            CVarDef.Create("game.station_rotation", true);
-
-        /// <summary>
         ///     When enabled, guests will be assigned permanent UIDs and will have their preferences stored.
         /// </summary>
         public static readonly CVarDef<bool> GamePersistGuests =
@@ -379,13 +361,13 @@ namespace Content.Shared.CCVar
         ///     How many traits a character can have at most.
         /// </summary>
         public static readonly CVarDef<int> GameTraitsMax =
-            CVarDef.Create("game.traits_max", 5, CVar.REPLICATED);
+            CVarDef.Create("game.traits_max", 10, CVar.REPLICATED);
 
         /// <summary>
         ///     How many points a character should start with.
         /// </summary>
         public static readonly CVarDef<int> GameTraitsDefaultPoints =
-            CVarDef.Create("game.traits_default_points", 5, CVar.REPLICATED);
+            CVarDef.Create("game.traits_default_points", 10, CVar.REPLICATED);
 
 
         /// <summary>
@@ -399,6 +381,26 @@ namespace Content.Shared.CCVar
         /// </summary>
         public static readonly CVarDef<int> GameLoadoutsPoints =
             CVarDef.Create("game.loadouts_points", 14, CVar.REPLICATED);
+
+
+        /// <summary>
+        ///     Whether to repeat eating doafters after completion
+        /// </summary>
+        public static readonly CVarDef<bool> GameAutoEatFood =
+            CVarDef.Create("game.auto_eat_food", false, CVar.REPLICATED);
+
+        /// <summary>
+        ///     Whether to repeat drinking doafters after completion
+        /// </summary>
+        public static readonly CVarDef<bool> GameAutoEatDrinks =
+            CVarDef.Create("game.auto_eat_drinks", false, CVar.REPLICATED);
+
+
+        /// <summary>
+        ///     When true, you have to press the change speed button to sprint.
+        /// </summary>
+        public static readonly CVarDef<bool> GamePressToSprint =
+            CVarDef.Create("game.press_to_sprint", true, CVar.REPLICATED);
 
 #if EXCEPTION_TOLERANCE
         /// <summary>
@@ -463,6 +465,12 @@ namespace Content.Shared.CCVar
         /// </summary>
         public static readonly CVarDef<float> AnnouncerVolume =
             CVarDef.Create("announcer.volume", 0.5f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        ///     Disables multiple announcement sounds from playing at once
+        /// </summary>
+        public static readonly CVarDef<bool> AnnouncerDisableMultipleSounds =
+            CVarDef.Create("announcer.disable_multiple_sounds", false, CVar.ARCHIVE | CVar.CLIENTONLY);
 
 
         /*
@@ -656,8 +664,8 @@ namespace Content.Shared.CCVar
          * Console
          */
 
-        public static readonly CVarDef<bool>
-            ConsoleLoginLocal = CVarDef.Create("console.loginlocal", true, CVar.ARCHIVE | CVar.SERVERONLY);
+        public static readonly CVarDef<bool> ConsoleLoginLocal =
+            CVarDef.Create("console.loginlocal", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// Automatically log in the given user as host, equivalent to the <c>promotehost</c> command.
@@ -824,8 +832,6 @@ namespace Content.Shared.CCVar
             CVarDef.Create("audio.admin_chat_sound_path", "/Audio/Items/pop.ogg", CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
         public static readonly CVarDef<float> AdminChatSoundVolume =
             CVarDef.Create("audio.admin_chat_sound_volume", -5f, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
-        public static readonly CVarDef<string> AHelpSound =
-            CVarDef.Create("audio.ahelp_sound", "/Audio/Effects/adminhelp.ogg", CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * HUD
@@ -890,6 +896,13 @@ namespace Content.Shared.CCVar
             CVarDef.Create("admin.announce_logout", true, CVar.SERVERONLY);
 
         /// <summary>
+        ///     The token used to authenticate with the admin API. Leave empty to disable the admin API. This is a secret! Do not share!
+        /// </summary>
+        public static readonly CVarDef<string> AdminApiToken =
+            CVarDef.Create("admin.api_token", string.Empty, CVar.SERVERONLY | CVar.CONFIDENTIAL);
+
+
+        /// <summary>
         /// Should users be able to see their own notes? Admins will be able to see and set notes regardless
         /// </summary>
         public static readonly CVarDef<bool> SeeOwnNotes =
@@ -952,6 +965,7 @@ namespace Content.Shared.CCVar
 
         /// <summary>
         ///     Should the ban details in admin channel include PII? (IP, HWID, etc)
+        /// </summary>
         public static readonly CVarDef<bool> AdminShowPIIOnBan =
             CVarDef.Create("admin.show_pii_onban", false, CVar.SERVERONLY);
 
@@ -1380,6 +1394,9 @@ namespace Content.Shared.CCVar
         public static readonly CVarDef<bool> OocEnableDuringRound =
             CVarDef.Create("ooc.enable_during_round", false, CVar.NOTIFY | CVar.REPLICATED | CVar.SERVER);
 
+        public static readonly CVarDef<bool> ShowOocPatronColor =
+            CVarDef.Create("ooc.show_ooc_patron_color", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENT);
+
         /*
          * LOOC
          */
@@ -1414,7 +1431,7 @@ namespace Content.Shared.CCVar
         ///     Controls whether the server will deny any players that are not whitelisted in the DB.
         /// </summary>
         public static readonly CVarDef<bool> WhitelistEnabled =
-            CVarDef.Create("whitelist.enabled", false, CVar.SERVERONLY);
+            CVarDef.Create("whitelist.enabled", false, CVar.REPLICATED);
 
         /// <summary>
         ///     The loc string to display as a disconnect reason when someone is not whitelisted.
@@ -1751,6 +1768,13 @@ namespace Content.Shared.CCVar
         /*
         * Accessibility
         */
+
+        /// <summary>
+        /// Chat window opacity slider, controlling the alpha of the chat window background.
+        /// Goes from to 0 (completely transparent) to 1 (completely opaque)
+        /// </summary>
+        public static readonly CVarDef<float> ChatWindowOpacity =
+            CVarDef.Create("accessibility.chat_window_transparency", 0.85f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Toggle for visual effects that may potentially cause motion sickness.
@@ -2208,6 +2232,14 @@ namespace Content.Shared.CCVar
         public static readonly CVarDef<string> ReplayAutoRecordTempDir =
             CVarDef.Create("replay.auto_record_temp_dir", "", CVar.SERVERONLY);
 
+
+        /// <summary>
+        ///     The amount of time between NPC Silicons draining their battery in seconds.
+        /// </summary>
+        public static readonly CVarDef<float> SiliconNpcUpdateTime =
+            CVarDef.Create("silicon.npcupdatetime", 1.5f, CVar.SERVERONLY);
+
+
         /*
          * Miscellaneous
          */
@@ -2237,11 +2269,11 @@ namespace Content.Shared.CCVar
             CVarDef.Create("glimmer.enabled", true, CVar.REPLICATED);
 
         /// <summary>
-        ///     The rate at which glimmer linearly decays. Since glimmer increases (usually) follow a logistic curve, this means glimmer
-        ///     becomes increasingly harder to raise after ~502 points.
+        ///     Passive glimmer drain per second.
+        ///     Note that this is randomized and this is an average value.
         /// </summary>
-        public static readonly CVarDef<float> GlimmerLinearDecayPerMinute =
-            CVarDef.Create("glimmer.linear_decay_per_minute", 6f, CVar.SERVERONLY);
+        public static readonly CVarDef<float> GlimmerLostPerSecond =
+            CVarDef.Create("glimmer.passive_drain_per_second", 0.1f, CVar.SERVERONLY);
 
         /// <summary>
         ///     Whether random rolls for psionics are allowed.
@@ -2260,7 +2292,7 @@ namespace Content.Shared.CCVar
         ///     Whether height & width sliders adjust a player's max view distance
         /// </summary>
         public static readonly CVarDef<bool> HeightAdjustModifiesZoom =
-            CVarDef.Create("heightadjust.modifies_zoom", true, CVar.SERVERONLY);
+            CVarDef.Create("heightadjust.modifies_zoom", false, CVar.SERVERONLY);
 
         /// <summary>
         ///     Enables station goals
@@ -2274,6 +2306,70 @@ namespace Content.Shared.CCVar
         public static readonly CVarDef<float> StationGoalsChance =
             CVarDef.Create("game.station_goals_chance", 0.1f, CVar.SERVERONLY);
 
+
+        #region CPR System
+        /// <summary>
+        ///     Controls whether the entire CPR system runs. When false, nobody can perform CPR. You should probably remove the trait too
+        ///     if you are wishing to permanently disable the system on your server.
+        /// </summary>
+        public static readonly CVarDef<bool> EnableCPR =
+            CVarDef.Create("cpr.enable", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     Toggles whether or not CPR reduces rot timers(As an abstraction of delaying brain death, the IRL actual purpose of CPR)
+        /// </summary>
+        public static readonly CVarDef<bool> CPRReducesRot =
+            CVarDef.Create("cpr.reduces_rot", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     Toggles whether or not CPR heals airloss, included for completeness sake. I'm not going to stop you if your intention is to make CPR do nothing.
+        ///     I guess it might be funny to troll your players with? I won't judge.
+        /// </summary>
+        public static readonly CVarDef<bool> CPRHealsAirloss =
+            CVarDef.Create("cpr.heals_airloss", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     The chance for a patient to be resuscitated when CPR is successfully performed.
+        ///     Setting this above 0 isn't very realistic, but people who see CPR in movies and TV will expect CPR to work this way.
+        /// </summary>
+        public static readonly CVarDef<float> CPRResuscitationChance =
+            CVarDef.Create("cpr.resuscitation_chance", 0.05f, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     By default, CPR reduces rot timers by an amount of seconds equal to the time spent performing CPR. This is an optional multiplier that can increase or decrease the amount
+        ///     of rot reduction. Set it to 2 for if you want 3 seconds of CPR to reduce 6 seconds of rot.
+        /// </summary>
+        /// <remarks>
+        ///     If you're wondering why there isn't a CVar for setting the duration of the doafter, that's because it's not actually possible to have a timespan in cvar form
+        ///     Curiously, it's also not possible for **shared** systems to set variable timespans. Which is where this system lives.
+        /// </remarks>
+        public static readonly CVarDef<float> CPRRotReductionMultiplier =
+            CVarDef.Create("cpr.rot_reduction_multiplier", 1f, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     By default, CPR heals airloss by 1 point for every second spent performing CPR. Just like above, this directly multiplies the healing amount.
+        ///     Set it to 2 to get 6 points of airloss healing for every 3 seconds of CPR.
+        /// </summary>
+        public static readonly CVarDef<float> CPRAirlossReductionMultiplier =
+            CVarDef.Create("cpr.airloss_reduction_multiplier", 1f, CVar.REPLICATED | CVar.SERVER);
+
+        #endregion
+
+        #region Contests System
+
+        /// <summary>
+        ///     The MASTER TOGGLE for the entire Contests System.
+        ///     ALL CONTESTS BELOW, regardless of type or setting will output 1f when false.
+        /// </summary>
+        public static readonly CVarDef<bool> DoContestsSystem =
+            CVarDef.Create("contests.do_contests_system", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     Contest functions normally include an optional override to bypass the clamp set by max_percentage.
+        ///     This CVar disables the bypass when false, forcing all implementations to comply with max_percentage.
+        /// </summary>
+        public static readonly CVarDef<bool> AllowClampOverride =
+            CVarDef.Create("contests.allow_clamp_override", true, CVar.REPLICATED | CVar.SERVER);
         /// <summary>
         ///     Toggles all MassContest functions. All mass contests output 1f when false
         /// </summary>
@@ -2281,11 +2377,100 @@ namespace Content.Shared.CCVar
             CVarDef.Create("contests.do_mass_contests", true, CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        ///     Toggles all StaminaContest functions. All stamina contests output 1f when false
+        /// </summary>
+        public static readonly CVarDef<bool> DoStaminaContests =
+            CVarDef.Create("contests.do_stamina_contests", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     Toggles all HealthContest functions. All health contests output 1f when false
+        /// </summary>
+        public static readonly CVarDef<bool> DoHealthContests =
+            CVarDef.Create("contests.do_health_contests", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     Toggles all MindContest functions. All mind contests output 1f when false.
+        ///     MindContests are not currently implemented, and are awaiting completion of the Psionic Refactor
+        /// </summary>
+        public static readonly CVarDef<bool> DoMindContests =
+            CVarDef.Create("contests.do_mind_contests", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        ///     Toggles all MoodContest functions. All mood contests output 1f when false.
+        /// </summary>
+        public static readonly CVarDef<bool> DoMoodContests =
+            CVarDef.Create("contests.do_mood_contests", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
         ///     The maximum amount that Mass Contests can modify a physics multiplier, given as a +/- percentage
         ///     Default of 0.25f outputs between * 0.75f and 1.25f
         /// </summary>
         public static readonly CVarDef<float> MassContestsMaxPercentage =
             CVarDef.Create("contests.max_percentage", 0.25f, CVar.REPLICATED | CVar.SERVER);
+
+        #endregion
+
+        #region Supermatter System
+
+        /// <summary>
+        ///     With completely default supermatter values, Singuloose delamination will occur if engineers inject at least 900 moles of coolant per tile
+        ///     in the crystal chamber. For reference, a gas canister contains 1800 moles of air. This Cvar directly multiplies the amount of moles required to singuloose.
+        /// </summary>
+        public static readonly CVarDef<float> SupermatterSingulooseMolesModifier =
+            CVarDef.Create("supermatter.singuloose_moles_modifier", 1f, CVar.SERVER);
+
+        /// <summary>
+        ///     Toggles whether or not Singuloose delaminations can occur. If both Singuloose and Tesloose are disabled, it will always delam into a Nuke.
+        /// </summary>
+        public static readonly CVarDef<bool> SupermatterDoSingulooseDelam =
+            CVarDef.Create("supermatter.do_singuloose", true, CVar.SERVER);
+
+        /// <summary>
+        ///     By default, Supermatter will "Tesloose" if the conditions for Singuloose are not met, and the core's power is at least 4000.
+        ///     The actual reasons for being at least this amount vary by how the core was screwed up, but traditionally it's caused by "The core is on fire".
+        ///     This Cvar multiplies said power threshold for the purpose of determining if the delam is a Tesloose.
+        /// </summary>
+        public static readonly CVarDef<float> SupermatterTesloosePowerModifier =
+            CVarDef.Create("supermatter.tesloose_power_modifier", 1f, CVar.SERVER);
+
+        /// <summary>
+        ///     Toggles whether or not Tesloose delaminations can occur. If both Singuloose and Tesloose are disabled, it will always delam into a Nuke.
+        /// </summary>
+        public static readonly CVarDef<bool> SupermatterDoTeslooseDelam =
+            CVarDef.Create("supermatter.do_tesloose", true, CVar.SERVER);
+
+        /// <summary>
+        ///     When true, bypass the normal checks to determine delam type, and instead use the type chosen by supermatter.forced_delam_type
+        /// </summary>
+        public static readonly CVarDef<bool> SupermatterDoForceDelam =
+            CVarDef.Create("supermatter.do_force_delam", false, CVar.SERVER);
+
+        /// <summary>
+        ///     If supermatter.do_force_delam is true, this determines the delamination type, bypassing the normal checks.
+        /// </summary>
+        public static readonly CVarDef<DelamType> SupermatterForcedDelamType =
+            CVarDef.Create("supermatter.forced_delam_type", DelamType.Singulo, CVar.SERVER);
+
+        /// <summary>
+        ///     Directly multiplies the amount of rads put out by the supermatter. Be VERY conservative with this.
+        /// </summary>
+        public static readonly CVarDef<float> SupermatterRadsModifier =
+            CVarDef.Create("supermatter.rads_modifier", 1f, CVar.SERVER);
+
+        #endregion
+
+        #region Mood System
+
+        public static readonly CVarDef<bool> MoodEnabled =
+            CVarDef.Create("mood.enabled", true, CVar.SERVER);
+
+        public static readonly CVarDef<bool> MoodIncreasesSpeed =
+            CVarDef.Create("mood.increases_speed", true, CVar.SERVER);
+
+        public static readonly CVarDef<bool> MoodDecreasesSpeed =
+            CVarDef.Create("mood.decreases_speed", true, CVar.SERVER);
+
+        #endregion
 
         /// <summary>
         /// How many characters the consent text can be. // Floofstation

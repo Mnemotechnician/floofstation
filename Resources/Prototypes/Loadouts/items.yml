@@ -63,11 +63,18 @@
     - CheapLighter
 
 - type: loadout
-  id: LoadoutItemMatches
+  id: LoadoutItemLighterFlippo
   category: Items
-  cost: 1
+  cost: 3
   items:
-    - Matchbox
+    - FlippoLighter
+
+- type: loadout
+  id: LoadoutItemSmokingPipeFilledTobacco
+  category: Items
+  cost: 2
+  items:
+    - SmokingPipeFilledTobacco
 
 - type: loadout
   id: LoadoutItemBlunt
@@ -190,6 +197,13 @@
   cost: 4
   items:
     - DoubleEmergencyOxygenTankFilled
+
+- type: loadout
+  id: LoadoutItemClothingMaskBreath
+  category: Items
+  cost: 1
+  items:
+    - ClothingMaskBreath
 
 - type: loadout
   id: LoadoutItemsEmergencyCrowbar
@@ -477,6 +491,20 @@
 
 #Misc Items
 - type: loadout
+  id: LoadoutItemFlash
+  category: Items
+  cost: 1
+  items:
+    - Flash
+  requirements:
+    - !type:CharacterDepartmentRequirement
+       departments:
+         - Security
+    - !type:CharacterJobRequirement
+       jobs:
+         - Brigmedic
+
+- type: loadout
   id: LoadoutItemPAI
   category: Items
   cost: 3
@@ -484,11 +512,42 @@
     - PersonalAI
 
 - type: loadout
+  id: LoadoutItemBackpackSatchelLeather
+  category: Items
+  cost: 1
+  items:
+    - ClothingBackpackSatchelLeather
+  requirements:
+    - !type:CharacterJobRequirement
+       inverted: true
+       jobs:
+         - Prisoner
+
+- type: loadout
   id: LoadoutItemWaistbag
   category: Items
   cost: 2
   items:
     - ClothingBeltStorageWaistbag
+  requirements:
+    - !type:CharacterJobRequirement
+       inverted: true
+       jobs:
+         - Prisoner
+
+- type: loadout
+  id: LoadoutItemCrayonBox
+  category: Items
+  cost: 4
+  items:
+    - CrayonBox
+
+- type: loadout
+  id: LoadoutItemBarberScissors
+  category: Items
+  cost: 4
+  items:
+    - BarberScissors
 
 - type: loadout
   id: LoadoutSolCommonTranslator

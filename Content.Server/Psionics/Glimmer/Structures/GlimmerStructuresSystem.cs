@@ -2,7 +2,6 @@ using Content.Server.Anomaly.Components;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Anomaly.Components;
-using Content.Shared.Mobs;
 using Content.Shared.Psionics.Glimmer;
 
 namespace Content.Server.Psionics.Glimmer
@@ -23,7 +22,6 @@ namespace Content.Server.Psionics.Glimmer
 
             SubscribeLocalEvent<GlimmerSourceComponent, AnomalyPulseEvent>(OnAnomalyPulse);
             SubscribeLocalEvent<GlimmerSourceComponent, AnomalySupercriticalEvent>(OnAnomalySupercritical);
-            SubscribeLocalEvent<GlimmerSourceComponent, MobStateChangedEvent>(OnMobStateChanged);
         }
 
         private void OnAnomalyVesselPowerChanged(EntityUid uid, AnomalyVesselComponent component, ref PowerChangedEvent args)
@@ -47,18 +45,12 @@ namespace Content.Server.Psionics.Glimmer
             // component.
 
             if (TryComp<AnomalyComponent>(uid, out var anomaly))
-                _glimmerSystem.DeltaGlimmerInput(5f * anomaly.Severity);
+                _glimmerSystem.Glimmer += (int) (5f * anomaly.Severity);
         }
 
         private void OnAnomalySupercritical(EntityUid uid, GlimmerSourceComponent component, ref AnomalySupercriticalEvent args)
         {
-            _glimmerSystem.DeltaGlimmerOutput(100);
-        }
-
-        private void OnMobStateChanged(EntityUid uid, GlimmerSourceComponent component, ref MobStateChangedEvent args)
-        {
-            if (args.NewMobState != MobState.Alive)
-                component.Active = false;
+            _glimmerSystem.Glimmer += 100;
         }
 
         public override void Update(float frameTime)
@@ -66,31 +58,19 @@ namespace Content.Server.Psionics.Glimmer
             base.Update(frameTime);
             foreach (var source in EntityQuery<GlimmerSourceComponent>())
             {
-                if (!_powerReceiverSystem.IsPowered(source.Owner))
-                    continue;
-
-                if (!source.Active)
+                if (!_powerReceiverSystem.IsPowered(source.Owner)
+                    || !source.Active)
                     continue;
 
                 source.Accumulator += frameTime;
 
                 if (source.Accumulator > source.SecondsPerGlimmer)
                 {
-                    var glimmerEquilibrium = GlimmerSystem.GlimmerEquilibrium;
                     source.Accumulator -= source.SecondsPerGlimmer;
-
-                    // Shorthand explanation:
-                    // This makes glimmer far more "Swingy", by making both positive and negative glimmer sources scale quite dramatically with glimmer
                     if (source.AddToGlimmer)
-                    {
-                        _glimmerSystem.DeltaGlimmerInput((_glimmerSystem.GlimmerOutput > glimmerEquilibrium ? _glimmerSystem.GetGlimmerOutputInteger() : 1f)
-                        * (_glimmerSystem.GlimmerOutput < glimmerEquilibrium ? _glimmerSystem.GetGlimmerEquilibriumRatio() : 1f));
-                    }
+                        _glimmerSystem.Glimmer++;
                     else
-                    {
-                        _glimmerSystem.DeltaGlimmerInput(-(_glimmerSystem.GlimmerOutput > glimmerEquilibrium ? _glimmerSystem.GetGlimmerOutputInteger() : 1f)
-                        * (_glimmerSystem.GlimmerOutput > glimmerEquilibrium ? _glimmerSystem.GetGlimmerEquilibriumRatio() : 1f));
-                    }
+                        _glimmerSystem.Glimmer--;
                 }
             }
         }

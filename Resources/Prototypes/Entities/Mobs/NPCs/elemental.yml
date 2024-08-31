@@ -101,12 +101,6 @@
       - SimpleHostile
   - type: Damageable
     damageContainer: StructuralInorganic
-  - type: PotentialPsionic
-  - type: Psionic
-    removable: false
-    dampening: 1
-    psychicFeedback:
-    - "orecrab-feedback"
 
 - type: entity
   parent: MobOreCrab
@@ -235,6 +229,7 @@
   description: It consists of a liquid, and it wants to dissolve you in itself.
   components:
   - type: GhostRole
+    prob: 0
     description: ghost-role-information-angry-slimes-description
   - type: NpcFactionMember
     factions:
@@ -298,13 +293,6 @@
     solution: bloodstream
   - type: DrainableSolution
     solution: bloodstream
-  - type: PotentialPsionic
-  - type: Psionic
-    removable: false
-    amplification: 1
-    psychicFeedback:
-    - "reagent-slime-feedback"
-  - type: CanWalk
 
 - type: entity
   name: Reagent Slime Spawner

@@ -7,7 +7,7 @@
   playTimeTracker: JobChiefMedicalOfficer
   antagAdvantage: 6 # DeltaV - Reduced TC: Head of Staff
   requirements:
-    - !type:DepartmentTimeRequirement
+    - !type:CharacterDepartmentTimeRequirement
       department: Medical
       time: 3600 # DeltaV - 12 hours
   weight: 10
@@ -34,8 +34,7 @@
       - type: CommandStaff
   - !type:AddComponentSpecial
     components:
-    - type: PsionicBonusChance #Nyano - Summary: makes it more likely to become psionic.
-      flatBonus: 0.025
+    - type: CPRTraining
 
 - type: startingGear
   id: CMOGear
