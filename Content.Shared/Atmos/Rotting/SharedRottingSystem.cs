@@ -1,3 +1,4 @@
+using Content.Shared.Cuffs.Components;
 using Content.Shared.Examine;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Mobs;
@@ -124,6 +125,13 @@ public abstract class SharedRottingSystem : EntitySystem
         {
             return false;
         }
+
+        // Floofstation - cocoons
+        if (TryComp<CuffableComponent>(uid, out var cuffed)
+            && cuffed.CuffedHandCount > 0
+            && TryComp<HandcuffComponent>(cuffed.LastAddedCuffs, out var cuffcomp)
+            && cuffcomp.NoRot)
+            return false;
 
         var ev = new IsRottingEvent();
         RaiseLocalEvent(uid, ref ev);

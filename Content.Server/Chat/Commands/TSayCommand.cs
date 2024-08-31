@@ -1,10 +1,7 @@
 using Content.Server.Chat.Systems;
 using Content.Shared.Administration;
-<<<<<<<< HEAD:Content.Server/Psionics/Telepathy/TSayCommand.cs
-========
 using Content.Shared.Chat;
 using Robust.Server.Player;
->>>>>>>> c00300bcd2f661215a9d605734766012c446a176:Content.Server/Chat/Commands/TSayCommand.cs
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.Player;

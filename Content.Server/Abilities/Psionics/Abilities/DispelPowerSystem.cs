@@ -22,10 +22,6 @@ namespace Content.Server.Psionics.Abilities
         [Dependency] private readonly SharedPsionicAbilitiesSystem _psionics = default!;
         [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
         [Dependency] private readonly PopupSystem _popupSystem = default!;
-<<<<<<<< HEAD:Content.Server/Psionics/Abilities/DispelPowerSystem.cs
-        [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-========
->>>>>>>> c00300bcd2f661215a9d605734766012c446a176:Content.Server/Abilities/Psionics/Abilities/DispelPowerSystem.cs
 
 
         public override void Initialize()
@@ -41,46 +37,8 @@ namespace Content.Server.Psionics.Abilities
             SubscribeLocalEvent<RevenantComponent, DispelledEvent>(OnRevenantDispelled);
         }
 
-<<<<<<<< HEAD:Content.Server/Psionics/Abilities/DispelPowerSystem.cs
-        private void OnInit(EntityUid uid, DispelPowerComponent component, ComponentInit args)
-        {
-            _actions.AddAction(uid, ref component.DispelActionEntity, component.DispelActionId );
-            _actions.TryGetActionData( component.DispelActionEntity, out var actionData );
-            if (actionData is { UseDelay: not null })
-                _actions.StartUseDelay(component.DispelActionEntity);
-            if (TryComp<PsionicComponent>(uid, out var psionic))
-            {
-                psionic.ActivePowers.Add(component);
-                psionic.PsychicFeedback.Add(component.DispelFeedback);
-                //It's fully intended that Dispel doesn't increase Amplification, and instead heavily spikes Dampening
-                //Antimage archetype.
-                psionic.Dampening += 1f;
-            }
-        }
-
-        private void OnShutdown(EntityUid uid, DispelPowerComponent component, ComponentShutdown args)
-        {
-            _actions.RemoveAction(uid, component.DispelActionEntity);
-
-            if (TryComp<PsionicComponent>(uid, out var psionic))
-            {
-                psionic.ActivePowers.Remove(component);
-                psionic.PsychicFeedback.Remove(component.DispelFeedback);
-                psionic.Dampening -= 1f;
-            }
-        }
-
         private void OnPowerUsed(DispelPowerActionEvent args)
         {
-            if (HasComp<PsionicInsulationComponent>(args.Target) || HasComp<PsionicInsulationComponent>(args.Performer))
-                return;
-            if (!TryComp<PsionicComponent>(args.Performer, out var psionic) || !HasComp<PsionicComponent>(args.Target))
-                return;
-
-========
-        private void OnPowerUsed(DispelPowerActionEvent args)
-        {
->>>>>>>> c00300bcd2f661215a9d605734766012c446a176:Content.Server/Abilities/Psionics/Abilities/DispelPowerSystem.cs
             var ev = new DispelledEvent();
             RaiseLocalEvent(args.Target, ev, false);
 

@@ -4,11 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 
-<<<<<<<< HEAD:Content.Client/Psionics/UserInterface/GlimmerGraph.cs
-namespace Content.Client.Psionics.UI;
-========
 namespace Content.Client.UserInterface;
->>>>>>>> c00300bcd2f661215a9d605734766012c446a176:Content.Client/UserInterface/GlimmerGraph.cs
 
 public sealed class GlimmerGraph : Control
 {

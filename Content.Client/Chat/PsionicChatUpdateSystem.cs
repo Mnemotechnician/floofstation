@@ -2,11 +2,7 @@ using Content.Shared.Psionics.Abilities;
 using Content.Client.Chat.Managers;
 using Robust.Client.Player;
 
-<<<<<<<< HEAD:Content.Client/Psionics/Telepathy/PsionicChatUpdateSystem.cs
-namespace Content.Client.Psionics.Chat
-========
 namespace Content.Client.Chat
->>>>>>>> c00300bcd2f661215a9d605734766012c446a176:Content.Client/Chat/PsionicChatUpdateSystem.cs
 {
     public sealed class PsionicChatUpdateSystem : EntitySystem
     {
