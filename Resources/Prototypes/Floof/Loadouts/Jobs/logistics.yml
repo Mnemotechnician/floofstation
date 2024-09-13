@@ -1,7 +1,7 @@
 # General logistics
 - type: loadout
   id: LoadoutClothingHandsLogisWarmers
-  category: JobsAUncategorized
+  category: JobsCargo
   cost: 2
   exclusive: true
   items:
@@ -13,7 +13,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksLogis
-  category: JobsAUncategorized
+  category: JobsCargo
   cost: 2
   exclusive: true
   items:
@@ -30,7 +30,7 @@
 
 - type: loadout
   id: LoadoutClothingUniformLogisThong
-  category: JobsAUncategorized
+  category: JobsCargo
   cost: 2
   exclusive: true
   items:
@@ -43,7 +43,7 @@
 # Courier
 - type: loadout
   id: LoadoutClothingHandsCourierWarmers
-  category: JobsAUncategorized
+  category: JobsCargo
   cost: 1
   exclusive: true
   items:
@@ -55,7 +55,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksCourier
-  category: JobsAUncategorized
+  category: JobsCargo
   cost: 2
   exclusive: true
   items:
@@ -72,7 +72,7 @@
 
 - type: loadout
   id: LoadoutClothingUniformCourierThong
-  category: JobsAUncategorized
+  category: JobsCargo
   cost: 1
   exclusive: true
   items:
@@ -84,7 +84,7 @@
 
 - type: loadout
   id: LoadoutCargoNeckCollar
-  category: JobsAUncategorized
+  category: JobsCargo
   cost: 1
   requirements:
   - !type:CharacterJobRequirement

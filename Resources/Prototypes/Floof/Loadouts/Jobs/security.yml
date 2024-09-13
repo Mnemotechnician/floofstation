@@ -1,7 +1,7 @@
 # General security
 - type: loadout
   id: LoadoutClothingHandsSecurityWarmers
-  category: JobsAUncategorized
+  category: JobsSecurity
   cost: 2
   exclusive: true
   items:
@@ -17,7 +17,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksSecurity
-  category: JobsAUncategorized
+  category: JobsSecurity
   cost: 2
   exclusive: true
   items:
@@ -38,7 +38,7 @@
 
 - type: loadout
   id: LoadoutClothingUniformSecurityThong
-  category: JobsAUncategorized
+  category: JobsSecurity
   cost: 2
   exclusive: true
   items:
@@ -55,7 +55,7 @@
 # Detective
 - type: loadout
   id: LoadoutClothingHandsDetectiveWarmers
-  category: JobsAUncategorized
+  category: JobsSecurity
   cost: 1
   exclusive: true
   items:
@@ -67,7 +67,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksDetective
-  category: JobsAUncategorized
+  category: JobsSecurity
   cost: 1
   exclusive: true
   items:
@@ -84,7 +84,7 @@
 
 - type: loadout
   id: LoadoutClothingUniformDetectiveThong
-  category: JobsAUncategorized
+  category: JobsSecurity
   cost: 1
   exclusive: true
   items:
@@ -96,7 +96,7 @@
 
 - type: loadout
   id: LoadoutSecurityNeckCollar
-  category: JobsAUncategorized
+  category: JobsSecurity
   cost: 1
   requirements:
   - !type:CharacterJobRequirement
