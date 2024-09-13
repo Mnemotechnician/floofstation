@@ -17,7 +17,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksMedic
-  category: JobsAUncategorized
+  category: JobsMedical
   cost: 2
   exclusive: true
   items:
