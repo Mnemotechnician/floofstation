@@ -1,7 +1,7 @@
 # General epistemics
 - type: loadout
   id: LoadoutClothingHandsEpiWarmers
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 2
   exclusive: true
   items:
@@ -16,7 +16,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksEpi
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 2
   exclusive: true
   items:
@@ -37,7 +37,7 @@
 
 - type: loadout
   id: LoadoutClothingUniformEpiThong
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 2
   exclusive: true
   items:
@@ -53,7 +53,7 @@
 # Psionic mantis
 - type: loadout
   id: LoadoutClothingHandsMantisEpiWarmers
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 1
   exclusive: true
   items:
@@ -65,7 +65,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksMantisEpi
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 1
   exclusive: true
   items:
@@ -83,7 +83,7 @@
 
 - type: loadout
   id: LoadoutClothingUniformMantisEpiThong
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 1
   exclusive: true
   items:
@@ -96,7 +96,7 @@
 # Chaplain
 - type: loadout
   id: LoadoutClothingHandChaplainWarmers
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 2
   exclusive: true
   items:
@@ -108,7 +108,7 @@
 
 - type: loadout
   id: LoadoutClothingUnderSocksChaplain
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 2
   exclusive: true
   items:
@@ -125,7 +125,7 @@
 
 - type: loadout
   id: LoadoutClothingUniformChaplainThong
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 2
   exclusive: true
   items:
@@ -137,7 +137,7 @@
 
 - type: loadout
   id: LoadoutClothingChaplainEpiMantle
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 1
   exclusive: true
   items:
@@ -149,7 +149,7 @@
 
 - type: loadout
   id: LoadoutScienceNeckCollar
-  category: JobsAUncategorized
+  category: JobsScience
   cost: 1
   requirements:
   - !type:CharacterJobRequirement
