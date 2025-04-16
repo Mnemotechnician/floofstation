@@ -1,3 +1,6 @@
+using System.Threading.Tasks;
+
+
 namespace Content.Server.FloofStation.SpaceComputer.VirtualCPU;
 
 using IS = InstructionSet;
@@ -17,7 +20,16 @@ public sealed class VirtualCPU(
 {
     public VirtualCPUDataProvider DataProvider = dataProvider;
     public VirtualCPUIOProvider IOProvider = ioProvider;
-    public event Action<CPUErrorCode>? ErrorHandler;
+    /// <summary>
+    ///     A function to handle errors in the CPU.
+    ///     Receives the error code and program counter as parameters.
+    /// </summary>
+    public event Action<CPUErrorCode, int>? ErrorHandler;
+    /// <summary>
+    ///     A function to debug the CPU. Invoked on each tick with the current opcode as the parameter.
+    ///     If it returns true, the processor waits on the instruction until it returns false.
+    /// </summary>
+    public Func<IS, bool>? Debugger;
 
     private CPUMemoryCell[] _operationStack = operationStack;
     private int _operationStackTop = 0;
@@ -39,8 +51,7 @@ public sealed class VirtualCPU(
     {
         Halted = Waiting = false;
         ProgramCounter = pc;
-        _operationStackBottom = _operationStackTop = _operationStack.Length - 1;
-        _ticks = 0;
+        _operationStackBottom = _operationStackTop = _operationStack.Length;
     }
 
     public void ProcessTicks(int ticks)
@@ -54,7 +65,7 @@ public sealed class VirtualCPU(
                 ticks -= ExecuteInstruction();
             } catch (CPUExecutionException e) {
                 Halted = true;
-                ErrorHandler?.Invoke(e.ErrorCode);
+                ErrorHandler?.Invoke(e.ErrorCode, previousPC);
 
                 // The error handler can in theory reset the halted state and continue execution
                 if (Halted)
@@ -66,7 +77,7 @@ public sealed class VirtualCPU(
             // Also, we reset the PC of the CPU, So that on the next call of this method it executes the same instruction again.
             if (Waiting)
             {
-                ProgramCounter = previousPC
+                ProgramCounter = previousPC;
                 return;
             }
         }
@@ -88,6 +99,13 @@ public sealed class VirtualCPU(
         if (nextOpCode is < 0 or > (int) IS.MAX_EXCEPT_HALT)
             throw new CPUExecutionException(CPUErrorCode.IllegalInstruction);
 
+        // Debug
+        if (Debugger is not null && Debugger.Invoke((IS) nextOpCode))
+        {
+            Waiting = true;
+            return 1;
+        }
+
         switch ((IS) nextOpCode)
         {
             case IS.NOP:
@@ -98,19 +116,30 @@ public sealed class VirtualCPU(
                 return 1;
 
             case IS.LOAD:
+            {
                 var addr = ReadNext().Int32;
+                if (addr == -1)
+                    addr = Peek().Int32; // Hacky
+
                 var value = DataProvider.GetValue(addr);
                 Push(value);
                 return 1;
+            }
 
-            case IS.STORE:
-                addr = ReadNext().Int32;
-                value = _operationStack[_operationStackTop];
-                DataProvider.SetValue(addr, value);
+            case IS.PUSH:
+                Push(ReadNext());
                 return 1;
 
+            case IS.STORE:
+            {
+                var addr = ReadNext().Int32;
+                var value = _operationStack[_operationStackTop];
+                DataProvider.SetValue(addr, value);
+                return 1;
+            }
+
             case IS.DUP:
-                Push(_operationStack[_operationStackTop]);
+                Push(Peek());
                 return 1;
 
             case IS.DROP:
@@ -118,42 +147,49 @@ public sealed class VirtualCPU(
                 return 1;
 
             case IS.BINARY:
+            {
                 var type = ReadNext().Int32;
                 var operation = ReadNext().Int32;
                 return ExecuteBinaryOperation(type, operation);
+            }
 
-            case InstructionSet.JMP:
+            case IS.JMP:
                 // Sigsegv go brrrr
-                addr = ReadNext().Int32;
-                ProgramCounter = addr;
+                ProgramCounter = ReadNext().Int32;
                 return 1;
 
-            case InstructionSet.JMPC:
-                type = ReadNext().Int32;
-                addr = ReadNext().Int32;
+            case IS.JMPC:
+            {
+                var type = ReadNext().Int32;
+                var addr = ReadNext().Int32;
 
                 if (CheckConditionalJump(type, addr))
                     ProgramCounter = addr;
 
                 return 3; // Conditional jumps are expensive duh
+            }
 
-            case InstructionSet.OUT:
+            case IS.OUT:
+            {
                 var port = ReadNext().Int32;
-                var valueOut = Pop();
+                var valueOut = Peek();
                 // Assuming the I/O provider will handle the console/port output separation
                 var success = ioProvider.TryWrite(port, valueOut);
                 Waiting = !success;
                 return 1;
+            }
 
-            case InstructionSet.IN:
-                port = ReadNext().Int32;
-                (success, value) = ioProvider.TryRead(port);
+            case IS.IN:
+            {
+                var port = ReadNext().Int32;
+                var (success, value) = ioProvider.TryRead(port);
                 Waiting = !success;
 
                 if (success)
                     Push(value);
 
                 return 1;
+            }
         }
 
         // SHould never happen
@@ -251,9 +287,15 @@ public sealed class VirtualCPU(
         throw new CPUExecutionException(CPUErrorCode.IllegalInstruction);
     }
 
+    public IEnumerable<CPUMemoryCell> DumpStack()
+    {
+        for (var i = _operationStackTop; i < _operationStack.Length; i++)
+            yield return _operationStack[i];
+    }
+
     private bool CheckConditionalJump(int type, int addr)
     {
-        var value = ReadNext().Int32;
+        var value = Peek().Int32;
         switch ((JumpType) type)
         {
             case JumpType.Zero:
@@ -263,26 +305,34 @@ public sealed class VirtualCPU(
                 return value != 0;
         }
 
-        throw new CPUExecutionException(CPUErrorCode.InvalidType)
+        throw new CPUExecutionException(CPUErrorCode.InvalidType);
     }
 
     private void Push(CPUMemoryCell value)
     {
-        if (_operationStackTop < 0)
+        if (_operationStackTop > _operationStackBottom ||_operationStackTop <= 0)
             throw new CPUExecutionException(CPUErrorCode.StackOverflow);
 
-        _operationStack[_operationStackTop--] = value;
+        _operationStack[--_operationStackTop] = value;
     }
 
     private CPUMemoryCell Pop()
     {
-        if (_operationStackTop >= _operationStackBottom)
+        if (_operationStackTop >= _operationStackBottom || _operationStackTop < 0)
             throw new CPUExecutionException(CPUErrorCode.StackUnderflow);
 
-        return _operationStack[--_operationStackTop];
+        return _operationStack[_operationStackTop++];
     }
 
-    private CPUMemoryCell ReadNext() => DataProvider.GetValue(ProgramCounter++);
+     private CPUMemoryCell Peek()
+     {
+         if (_operationStackTop >= _operationStackBottom || _operationStackTop < 0)
+             throw new CPUExecutionException(CPUErrorCode.StackUnderflow);
+
+         return _operationStack[_operationStackTop];
+     }
+
+     private CPUMemoryCell ReadNext() => DataProvider.GetValue(ProgramCounter++);
 }
 
 // ReSharper disable once InconsistentNaming
