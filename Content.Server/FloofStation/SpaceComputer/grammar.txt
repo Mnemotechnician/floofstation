@@ -1,0 +1,96 @@
+SpaceC grammar
+
+#####################
+# Pre-lex definions #
+#####################
+letter        ::= ([any letter]|"_")
+digit         ::= [0-9]
+anything      ::= [any symbol]
+
+
+
+###########
+# Lexicon #
+###########
+# Special symbols
+statement_end    ::= ";"
+assignment       ::= "="
+colon            ::= ":"
+lparen           ::= "("
+rparen           ::= ")"
+lbracket         ::= "{"
+rbracket         ::= "}"
+
+# Operators
+equals           ::= "=="
+not_equals       ::= "!="
+less_than        ::= "<"
+greater_than     ::= ">"
+less_equal       ::= "<="
+greater_equal    ::= ">="
+dot              ::= "."
+string_delimiter ::= ("\""|"'")
+
+minus            ::= "-"
+plus             ::= "+"
+times            ::= "*"
+over             ::= "/"
+modulo           ::= "%"
+
+# Keywords
+kvar          ::= ("var" | "val")
+kecho         ::= echo
+
+# Whitespace is ignored
+whitespace    ::= (" "|"\n"|"\t")
+
+
+# More complex constructs
+identifier ::= letter (letter | digit)+
+
+integer_literal ::= digit+
+
+float_literal   ::= digit+ (dot digit*)?
+| dot digit+
+
+string_literal ::= string_delimiter
+
+
+
+###########
+# Grammar #
+###########
+body       ::= (statement statement_end)+
+code_block ::= lbracket body rbracket
+
+statement ::= expression
+| variable_def
+#           | function_def #TODO
+            | kecho expression     # Logging into console
+
+
+# Expressions
+expression ::= binary_expr
+| unary_expr
+| constant
+| lparen expression rparen
+
+binary_expr ::= mult_bexpr              # Multiplication or division
+| add_bexpr               # Addition or subtraction
+| expression % expression # Modulo
+
+unary_expr ::= minus expression
+
+mult_bexpr ::= expression times expression
+| expression over expression
+
+add_bexpr  ::= expression plus expression
+| expression minus expression
+
+constant   ::= integer_literal
+| float_literal
+| string_literal
+
+
+# Variables
+variable_def ::= kvar identifier color type (equals expression)?
