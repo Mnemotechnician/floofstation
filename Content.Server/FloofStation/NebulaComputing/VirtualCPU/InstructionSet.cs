@@ -27,24 +27,26 @@ public enum InstructionSet : byte
 /// <summary>
 ///     Used to specify the type of operands for use with the BINARY instruction
 /// </summary>
+/// <remarks>Names are intentionally kept simple to allow reusing in the asm compiler.</remarks>
 public enum OperandType : int
 {
-    Integer = 0,
-    Float   = 1,
-    Max = Float
+    Int   = 0,
+    Float = 1,
+    Max   = Float
 }
 
 /// <summary>
 ///     Used to specify the type of operations for use with the BINARY instruction
 /// </summary>
-public enum OperationType : int
+/// <remarks>Names are intentionally kept simple to allow reusing in the asm compiler.</remarks>
+public enum BinaryOperationType : int
 {
-    Add      = 1,
-    Subtract = 2,
-    Multiply = 3,
-    Divide   = 4,
-    Modulus  = 5,
-    Max = Modulus
+    Add = 1,
+    Sub = 2,
+    Mul = 3,
+    Div = 4,
+    Mod = 5,
+    MaxValue = Mod
 }
 
 /// <summary>

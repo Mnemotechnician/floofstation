@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using Content.Server.FloofStation.SpaceComputer.VirtualCPU;
+using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 using NUnit.Framework;
 
-namespace Content.Tests.Server.Floof.NebulaComputing;
+namespace Content.Tests.Server.Floof.NebulaComputing ;
 
 using IS = InstructionSet;
 
 
-public sealed class VirtualCPUTest
+public sealed partial class VirtualCPUTest
 {
     [Test]
     public void TestSimpleProgramWithOutput()
@@ -33,29 +33,7 @@ public sealed class VirtualCPUTest
             (int) IS.HALT
         ];
 
-        Console.WriteLine("CPU has started.");
-
-        var cpu = CreateTestCPU(20, program, "");
-        var assumedTicks = 0;
-        // Simple debugger to log executed instructions
-        // var instructionLog = "";
-        // cpu.Debugger = (instruction) =>
-        // {
-        //     instructionLog += $"({instruction}) ";
-        //     return false;
-        // };
-
-        while (!cpu.Halted)
-        {
-            cpu.ProcessTicks(10);
-            assumedTicks += 10;
-
-            Assert.That(assumedTicks < 10000, "Endless loop in CPU detected.");
-        }
-        Console.WriteLine("CPU has halted.");
-        //Console.WriteLine($"Executed the following:\n{instructionLog}");
-
-        Assert.That((cpu.IOProvider as ConsoleIOProvider)?.CombinedOutput, Is.EqualTo("hello world!"));
+        TestSimpleCPU(20, program, "", "hello world!", true);
     }
 
     [Test]
@@ -104,91 +82,7 @@ public sealed class VirtualCPUTest
             (int) IS.HALT
         };
 
-        Console.WriteLine("CPU has started.");
-
-        var cpu = CreateTestCPU(30, program, "chicken nuggies\0");
-        var assumedTicks = 0;
-        // Simple debugger to log executed instructions
-        var instructionLog = "";
-        cpu.Debugger = (instruction) =>
-        {
-            instructionLog += $"({instruction}) ";
-            return false;
-        };
-
-        while (!cpu.Halted)
-        {
-            cpu.ProcessTicks(10);
-            assumedTicks += 10;
-
-            Assert.That(assumedTicks < 10000, "Endless loop in CPU detected.");
-        }
-        Console.WriteLine("CPU has halted.");
-        Console.WriteLine($"Executed the following:\n{instructionLog}");
-
-        Assert.That((cpu.IOProvider as ConsoleIOProvider)?.CombinedOutput,
-            Is.EqualTo("write string\nchicken nuggies"));
+        TestSimpleCPU(30, program, "chicken nuggies\0", "write string\nchicken nuggies");
     }
 
-    public VirtualCPU CreateTestCPU(int entryPoint, int[] program, string inputData = "")
-    {
-        var cpu = new VirtualCPU(
-            new StaticDataProvider(program),
-            new ConsoleIOProvider(inputData),
-            new CPUMemoryCell[100]);
-
-        cpu.ErrorHandler += (errorCode, programCounter) =>
-        {
-            Console.WriteLine($"CPU encountered error {errorCode}. PC={programCounter}");
-            Console.WriteLine("Stack dump (top-to-bottom):");
-
-            var i = 0;
-            foreach (var value in cpu.DumpStack())
-            {
-                Console.WriteLine($"{i++}. Numeric {value.Int32}, char {value.Char}");
-            }
-        };
-        cpu.Reset(entryPoint);
-        return cpu;
-    }
-
-    public sealed class StaticDataProvider(int[] data) : VirtualCPUDataProvider
-    {
-        public int[] Data => data;
-
-        public override CPUMemoryCell GetValue(int address)
-        {
-            if (address < 0 || address >= Data.Length)
-                throw new CPUExecutionException(CPUErrorCode.SegmentationFault);
-
-            return CPUMemoryCell.FromInt32(Data[address]);
-        }
-
-        public override void SetValue(int address, CPUMemoryCell value)
-        {
-            if (address < 0 || address >= Data.Length)
-                throw new CPUExecutionException(CPUErrorCode.SegmentationFault);
-
-            Data[address] = value.Int32;
-        }
-    }
-
-    public sealed class ConsoleIOProvider(string constantInput) : VirtualCPUIOProvider
-    {
-        public string ConstantInput = constantInput;
-        public int InputPos = 0;
-        public string CombinedOutput;
-
-        public override bool TryWrite(int port, CPUMemoryCell message)
-        {
-            Console.WriteLine($"On port {port}: {message.Char}  | {message.Int32}");
-            CombinedOutput += message.Char;
-            return true;
-        }
-
-        public override (bool success, CPUMemoryCell data) TryRead(int port)
-        {
-            return (true, CPUMemoryCell.FromInt32(ConstantInput[InputPos++]));
-        }
-    }
 }

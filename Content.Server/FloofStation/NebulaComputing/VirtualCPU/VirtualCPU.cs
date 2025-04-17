@@ -204,15 +204,15 @@ public sealed class VirtualCPU(
         if (type is < 0 or > (int) OperandType.Max)
             throw new CPUExecutionException(CPUErrorCode.InvalidType);
 
-        if (operation is < 0 or > (int) OperationType.Max)
+        if (operation is < 0 or > (int) BinaryOperationType.MaxValue)
             throw new CPUExecutionException(CPUErrorCode.InvalidType);
 
-        switch ((OperationType) operation)
+        switch ((BinaryOperationType) operation)
         {
             // Genuinely don't know how to implement it better other than maybe making a function matrix.
             // Though that won't make it less messy, only less readable but faster.
-            case OperationType.Add:
-                if (type == (int) OperandType.Integer) {
+            case BinaryOperationType.Add:
+                if (type == (int) OperandType.Int) {
                     var b = Pop().Int32;
                     var a = Pop().Int32;
                     Push(CPUMemoryCell.FromInt32(a + b));
@@ -223,8 +223,8 @@ public sealed class VirtualCPU(
                 }
                 return 1;
 
-            case OperationType.Subtract:
-                if (type == (int) OperandType.Integer) {
+            case BinaryOperationType.Sub:
+                if (type == (int) OperandType.Int) {
                     var b = Pop().Int32;
                     var a = Pop().Int32;
                     Push(CPUMemoryCell.FromInt32(a - b));
@@ -235,8 +235,8 @@ public sealed class VirtualCPU(
                 }
                 return 1;
 
-            case OperationType.Multiply:
-                if (type == (int) OperandType.Integer) {
+            case BinaryOperationType.Mul:
+                if (type == (int) OperandType.Int) {
                     var b = Pop().Int32;
                     var a = Pop().Int32;
                     Push(CPUMemoryCell.FromInt32(a * b));
@@ -248,8 +248,8 @@ public sealed class VirtualCPU(
 
                 return 5; // Multiplication is more expensive: 5 ticks
 
-            case OperationType.Divide:
-                if (type == (int) OperandType.Integer) {
+            case BinaryOperationType.Div:
+                if (type == (int) OperandType.Int) {
                     var b = Pop().Int32;
                     var a = Pop().Int32;
                     // Integer division has a special case
@@ -265,8 +265,8 @@ public sealed class VirtualCPU(
 
                 return 11; // 11 ticks - don't do division unless you have to
 
-            case OperationType.Modulus:
-                if (type == (int) OperandType.Integer) {
+            case BinaryOperationType.Mod:
+                if (type == (int) OperandType.Int) {
                     var b = Pop().Int32;
                     var a = Pop().Int32;
                     // Integer division has a special case
@@ -326,7 +326,10 @@ public sealed class VirtualCPU(
 
      private CPUMemoryCell Peek(int offset = 0)
      {
-         if (_operationStackTop + offset >= _operationStackBottom || _operationStackTop + offset < 0)
+         if (_operationStackTop + offset >= _operationStackBottom)
+             throw new CPUExecutionException(CPUErrorCode.StackOverflow);
+
+         if (_operationStackTop + offset < 0)
              throw new CPUExecutionException(CPUErrorCode.StackUnderflow);
 
          return _operationStack[_operationStackTop + offset];

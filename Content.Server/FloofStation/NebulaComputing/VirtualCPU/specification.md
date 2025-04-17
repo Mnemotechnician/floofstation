@@ -5,6 +5,8 @@ For computer workflow, see [computer workflow](../computer%20workflow.md)
 
 For NebulaC syntax, see [grammar](../grammar.txt)
 
+For NebulaASM specification, see [specification](Assembly/specification.md)
+
 # Memory overview
 Memory is an array of 32-bit values.
 
@@ -32,18 +34,25 @@ Symbols like int specify the instruction pointer must be followed by a 32-bit va
 | IN          | port      | 0x0A int      | Read input from the virtual console or port onto the stack.                                                                                     |
 | HALT        |           | 0xff          | Stop execution of the program.                                                                                                                  |
 
+## Assembly pseudo-instructions. They do not have a binary equivalent.
+### Data definitions
+| Instruction | Arguments           | Description                                           |
+|-------------|---------------------|-------------------------------------------------------|
+| int         | label initial_value | Define a new integer value with label "label".        |
+| float       | label initial_value | Define a new floating point value with label "label". |
+
 ## Remarks
 ### Binary operation types
-The binary operation instructions (0x05 0x01-0x05) accept a type argument. The argument can be either 0 or 1.
+The binary operation instructions accept a type argument. The argument can be either int (0) or float (1).
 
-0 indicates that operands are integers and a respective integer binary operation is to be applied between them.
+int indicates that operands are integers and a respective integer binary operation is to be applied between them.
 
-1 indicates that operands are floating point numbers and a respective floating point binary operation is to be applied between them.
+float indicates that operands are floating point numbers and a respective floating point binary operation is to be applied between them.
 
 ### Conditional jump types
-0 performs a jump if the topmost value is zero.
+Zero (0) performs a jump if the topmost value is zero.
 
-1 performs a jump if the topmost value is non-zero.
+NonZero (1) performs a jump if the topmost value is non-zero.
 
 # Errors
 If the CPU encounters an error, it will output the error code to the virtual console and stop execution.
