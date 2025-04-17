@@ -2,7 +2,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
 
-namespace Content.Shared.FloofStation.SpaceComputer.Components;
+namespace Content.Shared.FloofStation.NebulaComputing.Components;
 
 
 // ReSharper disable once InconsistentNaming

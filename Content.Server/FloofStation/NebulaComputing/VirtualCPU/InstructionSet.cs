@@ -1,4 +1,4 @@
-namespace Content.Server.FloofStation.SpaceComputer.VirtualCPU;
+namespace Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 
 
 // ReSharper disable InconsistentNaming

@@ -1,7 +1,4 @@
-using System.Threading.Tasks;
-
-
-namespace Content.Server.FloofStation.SpaceComputer.VirtualCPU;
+namespace Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 
 using IS = InstructionSet;
 

@@ -6,7 +6,7 @@
   abstract: true
   components:
   - type: Sprite
-    sprite: Floof/Objects/Structures/SpaceComputer/computer.rsi
+    sprite: Floof/Objects/Structures/NebulaComputing/computer.rsi
     layers:
     - state: base
     - state: working

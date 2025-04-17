@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 
 
-namespace Content.Server.FloofStation.SpaceComputer.VirtualCPU;
+namespace Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 
 // Like a C union, but more verbose
 [StructLayout(LayoutKind.Explicit)]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Content.Server.FloofStation.SpaceComputer.VirtualCPU;
 using NUnit.Framework;
 
-namespace Content.Tests.Server.Utility;
+namespace Content.Tests.Server.Floof.NebulaComputing;
 
 using IS = InstructionSet;
 
