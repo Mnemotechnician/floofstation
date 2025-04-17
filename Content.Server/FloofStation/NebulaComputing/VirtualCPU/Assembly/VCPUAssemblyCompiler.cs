@@ -122,7 +122,6 @@ public sealed class VCPUAssemblyCompiler
             {
                 CurrentSection = section; // Inside of the loop in case of nested sections if those are ever added
                 SectionStatement();
-                EndOfStatement();
 
                 if (_pos < _input.Length)
                     continue;
@@ -171,15 +170,27 @@ public sealed class VCPUAssemblyCompiler
         }
 
         if (Peek() == ';')
+        {
+            Next();
             return;
+        }
 
         if (Identifier() is not {} name)
             return;
 
+        // Identifier followed by a colon is a label
+        if (Match(":"))
+        {
+            _labels.Add(new Label(name, CurrentAddress, CurrentSection));
+            return;
+        }
+
         // Simple instructions with no arguments
+        name = name.ToLower();
         if (SimpleInstructions.TryGetValue(name, out var simpleId))
         {
             Write(simpleId);
+            EndOfStatement();
             return;
         }
 
@@ -189,10 +200,11 @@ public sealed class VCPUAssemblyCompiler
             WriteInstruction(IS.BINARY);
             Write((int) OperandTypeOrError());
             Write((int) operationType);
+            EndOfStatement();
             return;
         }
 
-        switch (name.ToLower())
+        switch (name)
         {
             // Instructions with one integer argument
             case "out":
@@ -210,6 +222,7 @@ public sealed class VCPUAssemblyCompiler
             }
 
             // Instructions with integer arguments that allow referencing labels
+            case "store":
             case "push":
             case "load":
             {
@@ -230,14 +243,8 @@ public sealed class VCPUAssemblyCompiler
             case "jmp":
             case "jmpc":
             {
-                if (Integer() is not { } addr)
-                {
-                    Error("Expected jump address.");
-                    break;
-                }
-
-                WriteInstruction(IS.JMPC);
-                if (name.Equals("jmpc", StringComparison.OrdinalIgnoreCase))
+                WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
+                if (name == "jmpc")
                     Write((int) JumpTypeOrError());
 
                 if (Integer() is { } absoluteAddr)
@@ -254,23 +261,40 @@ public sealed class VCPUAssemblyCompiler
             }
 
             case "int":
+            case "char":
             case "float":
             {
                 // Optional label
                 if (Identifier() is {} label)
                     _labels.Add(new Label(label, CurrentAddress, CurrentSection));
 
-                CPUMemoryCell initializer;
-                // The below return values are never null even though the compiler thinks otherwise
-                if (name == "int")
-                    initializer = CPUMemoryCell.FromInt32(Integer() ?? 0);
-                else
-                    initializer = CPUMemoryCell.FromSingle(Float() ?? 0f);
+                // First initializer always exists, rest way or may not
+                // ARRAY SUPPORT HOLY SHIT
+                do {
+                    if (name == "int") {
+                        var init = CPUMemoryCell.FromInt32(Integer() ?? 0);
+                        Write(init.Int32);
+                    } else if (name == "char") {
+                        // This one supports both strings and single characters
+                        if (AnyString() is { } str) {
+                            foreach (var c in str)
+                                Write(c);
+                        } else if (Integer() is {} c) {
+                            Write(c);
+                        } else {
+                            Error("Expected a string or integer initializer");
+                            str = "???";
+                        }
+                    } else {
+                        var init = CPUMemoryCell.FromSingle(Float() ?? 0f);
+                        Write(init.Int32);
+                    }
+                } while (Match(","));
 
-                Write(initializer.Int32);
                 break;
             }
         }
+        EndOfStatement();
     }
 
     private void EndOfStatement()
@@ -343,6 +367,35 @@ public sealed class VCPUAssemblyCompiler
         return result;
     }
 
+    /// <summary>
+    ///     Matches a string in single or double quotes.
+    /// </summary>
+    private string? AnyString()
+    {
+        SkipWS();
+        var quoteType = Peek();
+
+        if (quoteType is not '"' and not '\'')
+            return null;
+
+        _idBuilder.Clear();
+        char ch = Next();
+
+        while (ch != quoteType && ch != '\0')
+        {
+            _idBuilder.Append(ch);
+            ch = Next();
+        }
+
+        _pos++; // Skip the quote end
+        if (ch != quoteType) {
+            Error("Unterminated string");
+            return null;
+        }
+
+        return _idBuilder.ToString();
+    }
+
     /// <see cref="Identifier"/>
     private int? Integer()
     {
@@ -353,12 +406,21 @@ public sealed class VCPUAssemblyCompiler
         if (!char.IsDigit(ch))
             return null;
 
+        // Special case: if it is 0 followed by an "x", it's a hex number
         var number = 0;
-        while (char.IsDigit(ch))
-        {
-            number = 10 * number + (ch - '0');
-            _pos++;
-            ch = Peek();
+        if (Match("0x")) {
+            ch = char.ToLower(Peek());
+            while (char.IsDigit(ch) || ch is >= 'a' and <= 'f')
+            {
+                number = 16 * number + (char.IsDigit(ch) ? ch - '0' : ch - 'a' + 10);
+                ch = char.ToLower(Next());
+            }
+        } else {
+            while (char.IsDigit(ch))
+            {
+                number = 10 * number + (ch - '0');
+                ch = Next();
+            }
         }
 
         return sign ? -number : number;
@@ -468,7 +530,7 @@ public sealed class VCPUAssemblyCompiler
     }
 
     /// <returns>Next char or '\0' if end of input. Advances one char forward.</returns>
-    private char Next() => _pos >= _input.Length ? '\0' : _input[+_pos];
+    private char Next() => _pos >= _input.Length ? '\0' : _input[++_pos];
 
     /// <returns>Current char or '\0' if end of input.</returns>
     private char Peek() => _pos >= _input.Length ? '\0' : _input[_pos];

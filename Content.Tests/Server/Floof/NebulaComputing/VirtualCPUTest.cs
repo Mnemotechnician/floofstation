@@ -114,13 +114,56 @@ public sealed partial class VirtualCPUTest
             }
             """.Trim();
 
-        var assembler = new VCPUAssemblyCompiler();
-        var (success, code, entryPoint) = assembler.Compile(asm);
-
-        Assert.That(assembler.Errors, Is.Null, "Found errors while assembling:\n" + string.Join('\n', assembler.Errors ?? []));
-        Assert.That(success, Is.True, "No errors but failed to assemble");
-
-        char c125 = (char) 125;
+        var (code, entryPoint) = Assemble(asm);
+        var c125 = (char) 125;
         TestSimpleCPU(entryPoint, code, expectedOutput: $"{c125}{c125}{c125}", debug: true);
+    }
+
+    [Test]
+    public void TestMeowerAssembly()
+    {
+        var asm = """
+            .start code;
+            .section data {
+                int repeats 8;
+                int i 0;
+                char word "meow", 0x20, 0;
+            }
+            .section code {
+                load repeats;
+                store i;
+
+                sentenceLoop:
+                    drop;
+                    push 0; // j = 0
+                    wordLoop:
+                        dup;
+                        push word;
+                        add int;
+                        load -1;
+                        jmpc zero wordLoop_end;
+                        out 0; // Load word[j] and print it if it isn't 0
+                        drop; // drop char
+                        drop; // drop addr
+                        push 1;
+                        add int; // j++
+                    jmp wordLoop;
+
+                    wordLoop_end:
+                    drop; drop; drop; // Drop j, addr, and letter
+                    load i;
+                    push -1;
+                    add int;
+                    store i;
+                    // Man I should really make jmpc and the like pop the stack
+                jmpc nonZero sentenceLoop;
+                drop;
+
+                halt;
+            }
+        """;
+
+        var (code, entryPoint) = Assemble(asm);
+        TestSimpleCPU(entryPoint, code, expectedOutput: $"meow\nmeow\nmeow\nmeow\nmeow\nmeow\nmeow\nmeow\n", debug: true);
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
+using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Assembly;
 using NUnit.Framework;
 
 
@@ -8,6 +9,17 @@ namespace Content.Tests.Server.Floof.NebulaComputing;
 
 public sealed partial class VirtualCPUTest
 {
+    public (int[] code, int entryPoint) Assemble(string asm)
+    {
+        var assembler = new VCPUAssemblyCompiler();
+        var (success, code, entryPoint) = assembler.Compile(asm);
+
+        Assert.That(assembler.Errors, Is.Null, "Found errors while assembling:\n" + string.Join('\n', assembler.Errors ?? []));
+        Assert.That(success, Is.True, "No errors but failed to assemble");
+
+        return (code, entryPoint);
+    }
+
     /// <summary>
     ///     Run a simple CPU with fixed input and expected output.
     /// </summary>
@@ -34,7 +46,7 @@ public sealed partial class VirtualCPUTest
             cpu.ProcessTicks(10);
             assumedTicks += 10;
 
-            Assert.That(assumedTicks < 1000, "Endless loop in CPU detected.");
+            Assert.That(assumedTicks < 10000, "Endless loop in CPU detected.");
         }
         Console.WriteLine("CPU has halted.");
 
