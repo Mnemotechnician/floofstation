@@ -133,7 +133,10 @@ public sealed class VirtualCPU(
             case IS.STORE:
             {
                 var addr = ReadNext().Int32;
-                var value = _operationStack[_operationStackTop];
+                var value = Peek();
+                if (addr == -1)
+                    addr = Peek(1).Int32;
+
                 DataProvider.SetValue(addr, value);
                 return 1;
             }
@@ -324,12 +327,12 @@ public sealed class VirtualCPU(
         return _operationStack[_operationStackTop++];
     }
 
-     private CPUMemoryCell Peek()
+     private CPUMemoryCell Peek(int offset = 0)
      {
-         if (_operationStackTop >= _operationStackBottom || _operationStackTop < 0)
+         if (_operationStackTop + offset >= _operationStackBottom || _operationStackTop + offset < 0)
              throw new CPUExecutionException(CPUErrorCode.StackUnderflow);
 
-         return _operationStack[_operationStackTop];
+         return _operationStack[_operationStackTop + offset];
      }
 
      private CPUMemoryCell ReadNext() => DataProvider.GetValue(ProgramCounter++);
