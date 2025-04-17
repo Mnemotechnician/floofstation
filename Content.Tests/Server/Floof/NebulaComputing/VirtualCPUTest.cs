@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
+using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Assembly;
+using JetBrains.Annotations;
 using NUnit.Framework;
 
 namespace Content.Tests.Server.Floof.NebulaComputing ;
@@ -33,7 +35,7 @@ public sealed partial class VirtualCPUTest
             (int) IS.HALT
         ];
 
-        TestSimpleCPU(20, program, "", "hello world!", true);
+        TestSimpleCPU(20, program, "", "hello world!", false);
     }
 
     [Test]
@@ -85,4 +87,40 @@ public sealed partial class VirtualCPUTest
         TestSimpleCPU(30, program, "chicken nuggies\0", "write string\nchicken nuggies");
     }
 
+    [Test]
+    public void TestSimpleAssembly()
+    {
+        var asm = """
+            .start code;
+            .section data {
+                int wowie 25;
+                int 10;
+            }
+            .section code {
+                nop; nop; nop;
+
+                push 1;
+                push 2;
+                push 3;
+                add int; // 2 + 3
+
+                load wowie;
+                mul int; // * 25
+
+                out 0; out 0; out 0; // Print char 125 3 times
+                drop;
+
+                halt;
+            }
+            """.Trim();
+
+        var assembler = new VCPUAssemblyCompiler();
+        var (success, code, entryPoint) = assembler.Compile(asm);
+
+        Assert.That(assembler.Errors, Is.Null, "Found errors while assembling:\n" + string.Join('\n', assembler.Errors ?? []));
+        Assert.That(success, Is.True, "No errors but failed to assemble");
+
+        char c125 = (char) 125;
+        TestSimpleCPU(entryPoint, code, expectedOutput: $"{c125}{c125}{c125}", debug: true);
+    }
 }

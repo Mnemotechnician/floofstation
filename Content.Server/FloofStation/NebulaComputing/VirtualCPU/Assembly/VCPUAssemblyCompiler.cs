@@ -33,7 +33,7 @@ public sealed class VCPUAssemblyCompiler
     private List<Section> _sections = new();
     private List<Label> _labels = new();
     private StringBuilder _idBuilder = new();
-    private List<(int addressIntegerPosition, string targetLabel)> _labeledJumps = new();
+    private List<(int addressIntegerPosition, string targetLabel)> _labelledAddresses = new();
 
     /// <summary>Address at which the next written byte will appear. </summary>
     private int CurrentAddress => _output.Count;
@@ -47,11 +47,11 @@ public sealed class VCPUAssemblyCompiler
     /// <summary>
     ///     Not null after Compile() is called.
     /// </summary>
-    private List<int>? Output;
+    public List<int>? Output;
 
     public bool Errored => Errors is not null && Errors.Count > 0;
 
-    public bool Compile(string input)
+    public (bool success, int[]? code, int entryPoint) Compile(string input)
     {
         _input = input;
         _pos = 0;
@@ -59,35 +59,38 @@ public sealed class VCPUAssemblyCompiler
         _errors.Clear();
         _sections.Clear();
         _labels.Clear();
-        _labeledJumps.Clear();
+        _labelledAddresses.Clear();
         _startSectionName = null;
 
-        // Output a jump to the starting section
-        WriteInstruction(IS.JMP);
-        Write(int.MaxValue);
-
+        // Read the input and parse it
         while (_pos < _input.Length) {
             TopLevelStatement();
 
             if (_errors.Count > 9) {
-                _errors.Append("Too many errors. Stopping compilation.");
+                _errors.Add("Too many errors. Stopping compilation.");
                 break;
             }
         }
 
-        if (_startSectionName == null) {
-            _errors.Append("No start section specified. Specify one with .start <name>");
-        } else if (_sections.Find(it => it.Name == _startSectionName) is not {} startSection) {
-            _errors.Append($"Start section {_startSectionName} does not exist.");
-        } else {
-            _output[1] = startSection.StartAddress;
-        }
+        if (Errored)
+            return (false, null, -1);
 
+        // Find the main section
+        Section? startSection = null;
+        if (_startSectionName == null)
+            _errors.Add("No start section specified. Specify one with .start <name>");
+        else if (_sections.Find(it => it.Name == _startSectionName) is not {} _startSection)
+            _errors.Add($"Start section {_startSectionName} does not exist.");
+        else
+            startSection = _startSection;
 
         Output = _output;
         Errors = _errors.Count > 0 ? _errors : null;
 
-        return Errored;
+        if (Errored)
+            return (false, null, -1);
+
+        return (true, _output.ToArray(), startSection!.StartAddress);
     }
 
     /// <summary>
@@ -95,27 +98,26 @@ public sealed class VCPUAssemblyCompiler
     /// </summary>
     private void TopLevelStatement()
     {
-        SkipWS();
         var mark = _pos;
         int startSection = 0;
 
         if (Match(".section")) {
-            SkipWS();
             if (Identifier() is not { } name) {
-                Error("Expected an identier");
+                Error("Expected a section name");
                 name = "ERROR";
             }
-            SkipWS();
 
             if (!MatchOrError("{"))
+            {
+                Error("Section has no body (missing opening brace)");
                 return;
+            }
 
             var section = new Section(name, CurrentAddress);
             _sections.Add(section);
 
             // Pass 1 - read everything within
-            _labeledJumps.Clear();
-            SkipWS();
+            _labelledAddresses.Clear();
             while (!Match("}"))
             {
                 CurrentSection = section; // Inside of the loop in case of nested sections if those are ever added
@@ -129,11 +131,10 @@ public sealed class VCPUAssemblyCompiler
                 break;
             }
 
-            CurrentSection = null;
-            EndOfStatement();
 
             // Pass 2 - resolve labels
-            foreach (var (jumpAddr, label) in _labeledJumps)
+            CurrentSection = null;
+            foreach (var (jumpAddr, label) in _labelledAddresses)
             {
                 if (_labels.Find(it => it.Name == label) is { } targetLabel)
                     _output[jumpAddr] = targetLabel.StartAddress;
@@ -145,17 +146,21 @@ public sealed class VCPUAssemblyCompiler
 
             return;
         } else if (Match(".start")) {
-            SkipWS();
             var name = Identifier();
+            _startSectionName = name;
             EndOfStatement();
             return;
+        } else if (Match(";")) {
+            return; // I don't know why it happens
         }
 
         Error("Expected a top-level statement");
+        SkipUntilTerminator();
     }
 
     private void SectionStatement()
     {
+        SkipWS();
         if (Peek() == '.')
         {
             // Nested sections???
@@ -165,7 +170,9 @@ public sealed class VCPUAssemblyCompiler
             return;
         }
 
-        SkipWS();
+        if (Peek() == ';')
+            return;
+
         if (Identifier() is not {} name)
             return;
 
@@ -188,8 +195,6 @@ public sealed class VCPUAssemblyCompiler
         switch (name.ToLower())
         {
             // Instructions with one integer argument
-            case "load":
-            case "push":
             case "out":
             case "in":
             {
@@ -201,6 +206,24 @@ public sealed class VCPUAssemblyCompiler
 
                 WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
                 Write(addr);
+                break;
+            }
+
+            // Instructions with integer arguments that allow referencing labels
+            case "push":
+            case "load":
+            {
+                WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
+
+                if (Integer() is { } constant) {
+                    Write(constant);
+                } else if (Identifier() is { } label) {
+                    _labelledAddresses.Add((CurrentAddress, label));
+                    Write(int.MaxValue);
+                } else {
+                    Error("Expected address or label");
+                }
+
                 break;
             }
 
@@ -220,7 +243,7 @@ public sealed class VCPUAssemblyCompiler
                 if (Integer() is { } absoluteAddr)
                     Write(absoluteAddr);
                 else if (Identifier() is { } label) {
-                    _labeledJumps.Add((CurrentAddress, label));
+                    _labelledAddresses.Add((CurrentAddress, label));
                     Write(int.MaxValue);
                 } else {
                     Error("Expected jump address or label");
@@ -233,11 +256,9 @@ public sealed class VCPUAssemblyCompiler
             case "int":
             case "float":
             {
-                if (Identifier() is not { } label)
-                {
-                    Error("Expected a label");
-                    label = "???";
-                }
+                // Optional label
+                if (Identifier() is {} label)
+                    _labels.Add(new Label(label, CurrentAddress, CurrentSection));
 
                 CPUMemoryCell initializer;
                 // The below return values are never null even though the compiler thinks otherwise
@@ -246,7 +267,6 @@ public sealed class VCPUAssemblyCompiler
                 else
                     initializer = CPUMemoryCell.FromSingle(Float() ?? 0f);
 
-                _labels.Add(new Label(label, CurrentAddress, CurrentSection));
                 Write(initializer.Int32);
                 break;
             }
@@ -257,7 +277,10 @@ public sealed class VCPUAssemblyCompiler
     {
         SkipWS();
         if (!Match(";"))
+        {
             Error("Expected a semicolon after statement");
+            SkipUntilTerminator();
+        }
 
         SkipWS();
     }
@@ -290,20 +313,19 @@ public sealed class VCPUAssemblyCompiler
     /// <returns></returns>
     private string? Identifier()
     {
-        var mark = _pos;
-        var ch = Next();
+        SkipWS();
+
+        var ch = Peek();
         if (!char.IsLetter(ch))
-        {
-            _pos = mark;
             return null;
-        }
 
         _idBuilder.Clear();
         do
         {
             _idBuilder.Append(ch);
-            ch = Next();
-        } while (char.IsLetter(ch) || char.IsNumber(ch));
+            _pos++;
+            ch = Peek();
+        } while (char.IsLetter(ch) || char.IsNumber(ch) || ch is '_' or '-' or '?' or '@');
 
         return _idBuilder.ToString();
     }
@@ -324,33 +346,38 @@ public sealed class VCPUAssemblyCompiler
     /// <see cref="Identifier"/>
     private int? Integer()
     {
-        var mark = _pos;
-        var ch = Next();
+        SkipWS();
+
+        var sign = Match("-");
+        var ch = Peek();
         if (!char.IsDigit(ch))
-        {
-            _pos = mark;
             return null;
-        }
 
         var number = 0;
         while (char.IsDigit(ch))
         {
             number = 10 * number + (ch - '0');
-            ch = Next();
+            _pos++;
+            ch = Peek();
         }
 
-        return number;
+        return sign ? -number : number;
     }
 
     private float? Float()
     {
-        var mark = _pos;
+        SkipWS();
         if (Integer() is not { } integerPart)
             return null;
 
-        mark = _pos;
+        var mark = _pos;
         if (!Match(".") || Integer() is not { } fractionalPart)
             return (float) integerPart;
+
+        if (fractionalPart < 0) {
+            Error("What the fuck are you on about?");
+            fractionalPart = int.Abs(fractionalPart) * 10;
+        }
 
         var fractLength = _pos - mark - 1; // This hacky way to get the length of the fractional part
         return integerPart + fractionalPart * float.Pow(0.1f, fractLength);
@@ -384,6 +411,8 @@ public sealed class VCPUAssemblyCompiler
 
     private bool MatchOrError(string seq)
     {
+        SkipWS();
+
         var success = Match(seq);
         if (!success)
             Error($"Expected {seq}");
@@ -394,12 +423,18 @@ public sealed class VCPUAssemblyCompiler
     /// <summary>
     ///     Tries to match a given sequences. Returns true and advances on success.
     /// </summary>
-    private bool Match(string seq)
+    private bool Match(string seq, bool skipWS = true)
     {
+        if (skipWS)
+            SkipWS();
+
         var mark = _pos;
         var seqPos = 0;
-        while (seqPos < seq.Length && Next() == seq[seqPos])
+        while (seqPos < seq.Length && Peek() == seq[seqPos])
+        {
             seqPos++;
+            _pos++;
+        }
 
         if (seqPos == seq.Length)
             return true;
@@ -414,13 +449,13 @@ public sealed class VCPUAssemblyCompiler
             _pos++;
 
         // Skip comments and recursively skip whitespace after them
-        if (Match("//"))
+        if (Match("//", false))
         {
             while (Peek() is not '\n' and not '\0')
                 _pos++;
             SkipWS();
-        } else if (Match("/*")) {
-            while (!Match("*/"))
+        } else if (Match("/*", false)) {
+            while (!Match("*/", false) && Peek() is not '\0')
                 _pos++;
             SkipWS();
         }
@@ -428,19 +463,19 @@ public sealed class VCPUAssemblyCompiler
 
     private void SkipUntilTerminator()
     {
-        while (Peek() != ';')
+        while (Peek() is not ';' and not '\0')
             _pos++;
     }
 
     /// <returns>Next char or '\0' if end of input. Advances one char forward.</returns>
-    private char Next() => _pos >= _input.Length ? '\0' : _input[_pos++];
+    private char Next() => _pos >= _input.Length ? '\0' : _input[+_pos];
 
-    /// <returns>Next char or '\0' if end of input.</returns>
+    /// <returns>Current char or '\0' if end of input.</returns>
     private char Peek() => _pos >= _input.Length ? '\0' : _input[_pos];
 
-    private void WriteInstruction(IS instruction) => _output.Append((int) instruction);
+    private void WriteInstruction(IS instruction) => _output.Add((int) instruction);
 
-    private void Write(int value) => _output.Append(value);
+    private void Write(int value) => _output.Add(value);
 
     private void Error(string message, int addr = -1)
     {
@@ -448,7 +483,7 @@ public sealed class VCPUAssemblyCompiler
             addr = _pos;
 
         var (line, pos) = GetLineNumberAndPosAt(addr);
-        _errors.Append($"{message} at {line}:{pos}.");
+        _errors.Add($"{message} at {line}:{pos}.");
     }
 
     private class Section(string name, int startAddress)
