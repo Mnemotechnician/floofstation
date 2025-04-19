@@ -2,8 +2,13 @@ namespace Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 
 
 // ReSharper disable InconsistentNaming
-public enum InstructionSet : byte
+public enum InstructionSet : int
 {
+    // Flags
+    // Indicates that the command should try to preserve the stack. Not all commands support this.
+    PRESERVE_STACK_MASK = 0x100000,
+
+    // Instructions
     NOP    = 0x00,
     LOAD   = 0x01,
     STORE  = 0x02,
@@ -18,9 +23,21 @@ public enum InstructionSet : byte
     JMPC   = 0x08,
     OUT    = 0x09,
     IN     = 0x0A,
-    MAX_EXCEPT_HALT = IN,
+    CALL   = 0x0B,
+    RET    = 0x0C,
+    HALT   = 0x0D,
 
-    HALT   = 0xff,
+    MAX_OPCODE = HALT,
+    // Always invalid, useful to separate sections
+    INVALID = 0x1234ABCD,
+
+    // Same but with flags
+    LOAD_PSP   = LOAD   | PRESERVE_STACK_MASK,
+    STORE_PSP  = STORE  | PRESERVE_STACK_MASK,
+    BINARY_PSP = BINARY | PRESERVE_STACK_MASK,
+    JMPC_PSP   = JMPC   | PRESERVE_STACK_MASK,
+    OUT_PSP    = OUT    | PRESERVE_STACK_MASK,
+    IN_PSP     = IN     | PRESERVE_STACK_MASK
 }
 // ReSharper restore InconsistentNaming
 

@@ -39,6 +39,9 @@ public sealed partial class VirtualCPUTest
             };
         }
 
+        CPUErrorCode? ec = null;
+        cpu.ErrorHandler += (errorCode, programCounter) => { ec = errorCode; };
+
         Console.WriteLine("CPU has started.");
 
         while (!cpu.Halted)
@@ -54,6 +57,7 @@ public sealed partial class VirtualCPUTest
             Console.WriteLine($"Executed the following:\n{instructionLog}");
 
 
+        Assert.That(ec, Is.Null, $"CPU encountered error {ec}");
         Assert.That((cpu.IOProvider as ConsoleIOProvider)?.CombinedOutput,
             Is.EqualTo(expectedOutput));
     }

@@ -14,32 +14,55 @@ Memory is an array of 32-bit values.
 Binary format: numbers like 0x04 specify the exact binary value that the integer at the instruction pointer must have.
 Symbols like int specify the instruction pointer must be followed by a 32-bit value, aka an integer.
 
-| Instruction | Arguments | Binary format | Description                                                                                                                                  |
-|-------------|-----------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| NOP         |           | 0x00          | No operation; does nothing (useful for timing or alignment).                                                                                 |
-| LOAD        | addr      | 0x01 int      | Load data from memory address addr onto the operation stack. If addr is -1, then the topmost value on the stack is taken as address.         |
-| PUSH        | value     | 0x02 int      | Push a constant value onto the operation stack, OR push the address of the specified label.                                                  |
-| STORE       | addr      | 0x03 int      | Store data from the top of the stack into memory address addr, WITHOUT removing it. If addr is -1, then the value below it is taken as address. |
-| DUP         |           | 0x04          | Duplicate the value at the top of the stack.                                                                                                 |
-| DROP        |           | 0x05          | Remove the value at the top of the stack.                                                                                                    |
-| ADD         | TYPE      | 0x06 int 0x01 | Add the two top values on the stack together, remove them from the stack, and store the result on the stack.                                 |
-| SUB         | TYPE      | 0x06 int 0x02 | Subtract the topmost value on the stack from the value below it, remove them from the stack, and store the result on the stack.              |
-| MUL         | TYPE      | 0x06 int 0x03 | Multiply the two top values on the stack together, remove them from the stack, and store the result on the stack.                            |
-| DIV         | TYPE      | 0x06 int 0x04 | Subtract the value below the top by the top of the stack, remove them from the stack, and store the result on the stack.                     |
-| MOD         | TYPE      | 0x06 int 0x05 | Calculate the modulus between the two topmost values, remove them from the stack, and store the result on the stack.                         |
-| JMP         | addr      | 0x07          | Jump to the instruction at memory address addr.                                                                                              |
-| JMPC        | TYPE addr | 0x08 int int  | Conditional jump based on the topmost value on the stack.                                                                                    |
-| OUT         | 0x00      | 0x09 0x00     | Output the character value at the top of the stack to the virtual console.                                                                   |
-| OUT         | port      | 0x09 int      | Output the value at the top of the stack to the virtual console.                                                                             |
-| IN          | port      | 0x0A int      | Read input from the virtual console or port onto the stack.                                                                                  |
-| HALT        |           | 0xff          | Stop execution of the program.                                                                                                               |
+All operations that mention taking something from the stack, pop the stack.
+
+All operations that take an address or a port as a parameter can be given the value of -1 if the address is to be read from the stack.
+
+When the stack is popped multiple times, address arguments take precedence over non-address ones (i.e. the value is popped second, and the address is popped first).
+
+| Instruction | Arguments  | Binary format | Description                                                                                                         |
+|-------------|------------|---------------|---------------------------------------------------------------------------------------------------------------------|
+| NOP         |            | 0x00          | No operation; does nothing (useful for timing or alignment).                                                        |
+| LOAD        | addr       | 0x01 int      | Load data from memory address addr onto the stack. If addr is -1, then stack is popped and value is used as address. |
+| PUSH        | value      | 0x02 int      | Push a constant value onto the operation stack, OR push the address of the specified label.                         |
+| STORE       | addr       | 0x03 int      | Store data from the top of the stack into \[addr\].                                                                 |
+| DUP         | rel        | 0x04 int      | Read the value at (stack top + rel) without removing it, and push it onto the stack.                                |
+| DROP        | rel        | 0x05 int      | Remove the value at (stack top + rel). Removing non-top elements has greater performance cost.                      |
+| BINARY      | OTYPE KIND | 0x06 int int  | See below: binary operations. This instruction is bytecode only, assembly uses mnemonics for each operation kind.   |
+| JMP         | addr       | 0x07          | Jump to the instruction at memory address addr.                                                                     |
+| JMPC        | CTYPE addr | 0x08 int int  | Pops the stack and performs a conditional jump based on it.                                                         |
+| OUT         | 0x00       | 0x09 0x00     | Pop the stack and output to the virtual console (typically 0th port is the virtual console).                        |
+| OUT         | port       | 0x09 int      | Pop the stack and output to the virtual specified port.                                                             |
+| IN          | port       | 0x0A int      | Read input from the virtual console or port onto the stack.                                                         |
+| CALL        | addr       | 0x0B          | Push the instruction pointer onto the stack and jump to the instruction at memory address addr.                     |
+| RET         | num1 num2  | 0x0C int int  | Pop num1 stack frames, pop the stack and return from the function, pop num2 more frames.                            |
+| HALT        |            | 0x0D          | Stop execution of the program.                                                                                      |
+
+Any command can include one of the following flags in its instruction code (combine via binary OR):
+- PRESERVE_STACK (0x100000) - Do not modify the stack. This is useful for commands like JMPC which normally pop the stack regardless of which branch is taken.
 
 ## Assembly pseudo-instructions. They do not have a binary equivalent.
+### Binary operations
+
+| Instruction | Arguments  | Binary format | Description                                                                                         |
+|-------------|------------|---------------|-----------------------------------------------------------------------------------------------------|
+| ADD         | TYPE       | 0x06 int 0x01 | Add the two top values on the stack together, and store the result on the stack.                    |
+| SUB         | TYPE       | 0x06 int 0x02 | Subtract the topmost value on the stack from the value below it, and store the result on the stack. |
+| MUL         | TYPE       | 0x06 int 0x03 | Multiply the two top values on the stack together, and store the result on the stack.               |
+| DIV         | TYPE       | 0x06 int 0x04 | Subtract the value below the top by the top of the stack, and store the result on the stack.        |
+| MOD         | TYPE       | 0x06 int 0x05 | Calculate the modulus between the two topmost values, and store the result on the stack.            |
+
 ### Data definitions
-| Instruction | Arguments           | Description                                           |
-|-------------|---------------------|-------------------------------------------------------|
-| int         | label initial_value | Define a new integer value with label "label".        |
-| float       | label initial_value | Define a new floating point value with label "label". |
+| Instruction | Arguments           | Description                                                                        |
+|-------------|---------------------|------------------------------------------------------------------------------------|
+| int         | label initial_value | Define a new integer value with label "label".                                     |
+| float       | label initial_value | Define a new floating point value with label "label".                              |
+| char        | label initial_value | Define a new character value with label "label". Supports multi-character strings. |
+
+Those translate to a literal byte sequence in the memory.
+Placing those definitions inside a code segment must be done with care as the CPU will attempt to execute the stored data as instructions if it ever encounters it.
+
+An array can be defined by separating initial values with commas.
 
 ## Remarks
 ### Binary operation types

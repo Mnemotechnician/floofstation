@@ -31,6 +31,15 @@ public sealed class VirtualCPU(
     private CPUMemoryCell[] _operationStack = operationStack;
     private int _operationStackTop = 0;
     private int _operationStackBottom = 0;
+    /// <summary>
+    ///     Whether the CPU should revert the stack to its previous state at the end of the instruction. Set before a tick.
+    ///     Some instructions can manually handle this.
+    /// </summary>
+    private bool _shouldPreserveStack = false;
+    /// <summary>
+    ///     The previous stack top value, for use with the preserve stack flag.
+    /// </summary>
+    private int _previousTickStackTop = -1;
 
     public int ProgramCounter { get; set; }
 
@@ -69,13 +78,15 @@ public sealed class VirtualCPU(
                     return;
             }
 
+            TryRevertStack();
+
             // If the CPU is waiting, doesn't make any sense to process further. It means the CPU is waiting for something like player input,
             // Which is obviously not going to come out of the blue.
             // Also, we reset the PC of the CPU, So that on the next call of this method it executes the same instruction again.
             if (Waiting)
             {
                 ProgramCounter = previousPC;
-                return;
+                break;
             }
         }
     }
@@ -87,13 +98,16 @@ public sealed class VirtualCPU(
     public int ExecuteInstruction()
     {
         var nextOpCode = ReadNext().Int32;
-        if (nextOpCode == (int) IS.HALT)
-        {
-            Halted = true;
-            return 1;
+
+        // Preserve stack
+        _shouldPreserveStack = false;
+        if ((nextOpCode & (int) IS.PRESERVE_STACK_MASK) != 0) {
+            _shouldPreserveStack = true;
+            _previousTickStackTop = _operationStackTop;
+            nextOpCode &= ~(int) IS.PRESERVE_STACK_MASK;
         }
 
-        if (nextOpCode is < 0 or > (int) IS.MAX_EXCEPT_HALT)
+        if (nextOpCode is < 0 or > (int) IS.MAX_OPCODE)
             throw new CPUExecutionException(CPUErrorCode.IllegalInstruction);
 
         // Debug
@@ -112,39 +126,54 @@ public sealed class VirtualCPU(
                 Halted = true;
                 return 1;
 
-            case IS.LOAD:
-            {
-                var addr = ReadNext().Int32;
-                if (addr == -1)
-                    addr = Peek().Int32; // Hacky
-
+            case IS.LOAD: {
+                var addr = ReadOrPopAddr().Int32;
                 var value = DataProvider.GetValue(addr);
+
+                TryRevertStack(); // Make sure the push is saved even if preserving stack.
                 Push(value);
-                return 1;
+                return 2;
             }
 
             case IS.PUSH:
                 Push(ReadNext());
                 return 1;
 
-            case IS.STORE:
-            {
-                var addr = ReadNext().Int32;
-                var value = Peek();
-                if (addr == -1)
-                    addr = Peek(1).Int32;
+            case IS.STORE: {
+                var addr = ReadOrPopAddr().Int32;
+                var value = Pop();
 
                 DataProvider.SetValue(addr, value);
+                return 2;
+            }
+
+            case IS.DUP: {
+                var relative = ReadNext().Int32;
+                if (relative < 0)
+                    throw new CPUExecutionException(CPUErrorCode.SegmentationFault);
+
+                Push(Peek(relative));
                 return 1;
             }
 
-            case IS.DUP:
-                Push(Peek());
-                return 1;
+            case IS.DROP: {
+                var relative = ReadNext().Int32;
+                if (relative < 0)
+                    throw new CPUExecutionException(CPUErrorCode.SegmentationFault);
 
-            case IS.DROP:
-                Pop();
-                return 1;
+                if (relative + _operationStackTop >= _operationStack.Length)
+                    throw new CPUExecutionException(CPUErrorCode.StackUnderflow);
+
+                if (relative == 0)
+                    Pop();
+                else {
+                    // This one is tricky - we have to remove a middle element
+                    for (var i = _operationStackTop + relative; i > _operationStackTop; i--)
+                        _operationStack[i] = _operationStack[i - 1];
+                }
+
+                return 1 + relative; // Don't do relative drops unless you must
+            }
 
             case IS.BINARY:
             {
@@ -154,14 +183,16 @@ public sealed class VirtualCPU(
             }
 
             case IS.JMP:
+            {
                 // Sigsegv go brrrr
-                ProgramCounter = ReadNext().Int32;
+                ProgramCounter = ReadOrPopAddr().Int32;
                 return 1;
+            }
 
             case IS.JMPC:
             {
+                var addr = ReadOrPopAddr().Int32;
                 var type = ReadNext().Int32;
-                var addr = ReadNext().Int32;
 
                 if (CheckConditionalJump(type, addr))
                     ProgramCounter = addr;
@@ -171,8 +202,8 @@ public sealed class VirtualCPU(
 
             case IS.OUT:
             {
-                var port = ReadNext().Int32;
-                var valueOut = Peek();
+                var port = ReadOrPopAddr().Int32;
+                var valueOut = Pop();
                 // Assuming the I/O provider will handle the console/port output separation
                 var success = ioProvider.TryWrite(port, valueOut);
                 Waiting = !success;
@@ -181,7 +212,7 @@ public sealed class VirtualCPU(
 
             case IS.IN:
             {
-                var port = ReadNext().Int32;
+                var port = ReadOrPopAddr().Int32;
                 var (success, value) = ioProvider.TryRead(port);
                 Waiting = !success;
 
@@ -190,9 +221,33 @@ public sealed class VirtualCPU(
 
                 return 1;
             }
+
+            case IS.CALL:
+            {
+                var addr = ReadOrPopAddr().Int32;
+                Push(CPUMemoryCell.FromInt32(ProgramCounter)); // After the current instruction
+                ProgramCounter = addr;
+                return 1;
+            }
+
+            case IS.RET:
+            {
+                var numFramesBefore = ReadNext().Int32;
+                for (var i = 0; i < numFramesBefore; i++)
+                    Pop();
+
+                var retTarget = Pop().Int32;
+
+                var numFramesAfter = ReadNext().Int32;
+                for (var i = 0; i < numFramesAfter; i++)
+                    Pop();
+
+                ProgramCounter = retTarget;
+                return 1 + Math.Max(numFramesBefore, 0) + Math.Max(numFramesAfter, 0);
+            }
         }
 
-        // SHould never happen
+        // Should never happen
         throw new CPUExecutionException(CPUErrorCode.IllegalInstruction);
     }
 
@@ -295,7 +350,7 @@ public sealed class VirtualCPU(
 
     private bool CheckConditionalJump(int type, int addr)
     {
-        var value = Peek().Int32;
+        var value = Pop().Int32;
         switch ((JumpType) type)
         {
             case JumpType.Zero:
@@ -306,6 +361,31 @@ public sealed class VirtualCPU(
         }
 
         throw new CPUExecutionException(CPUErrorCode.InvalidType);
+    }
+
+    /// <summary>
+    ///     Reads an address parameter from the memory. If it is -1, pops it from the stack.
+    /// </summary>
+    /// <returns></returns>
+    private CPUMemoryCell ReadOrPopAddr()
+    {
+        var addr = ReadNext().Int32;
+        if (addr == -1)
+            return Pop();
+
+        return CPUMemoryCell.FromInt32(addr);
+    }
+
+    /// <summary>
+    ///     If we are preserving the stack, revert it to how it was before this tick.
+    /// </summary>
+    private void TryRevertStack()
+    {
+        if (!_shouldPreserveStack)
+            return;
+
+        _operationStackTop = _previousTickStackTop;
+        _shouldPreserveStack = false;
     }
 
     private void Push(CPUMemoryCell value)

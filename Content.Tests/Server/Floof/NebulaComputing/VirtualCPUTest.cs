@@ -22,20 +22,21 @@ public sealed partial class VirtualCPUTest
             0, 0, 0, 0, 0, 0, 0, 0, // 14-19 - padding ints
 
             // Code section - int 20
-            (int) IS.PUSH, 0,     // Push the address of the string onto the stack, acting as the counter
+            (int) IS.PUSH, 0,                           // Push the address of the string onto the stack, acting as the counter
             // Label 22 - begin loop
-            (int) IS.LOAD, -1,    // Load value from memory via address on the stack
-            (int) IS.JMPC, 0, 37, // Jump to end if the value is zero
-            (int) IS.OUT, 0,      // Otherwise print it to the console
-            (int) IS.DROP,        // And pop it
-            (int) IS.PUSH, 1,     // Increment the address
-            (int) IS.BINARY, 0, 1,// ...
-            (int) IS.JMP, 22,     // and repeat
-            // Label 37 - end loop
+            (int) IS.LOAD_PSP, -1,                      // Load value from memory via address on the stack
+            (int) IS.JMPC_PSP, 36, (int) JumpType.Zero, // Jump to end if the value is zero
+            (int) IS.OUT, 0,                            // Otherwise print it to the console
+            (int) IS.PUSH, 1,                           // Increment the address
+            (int) IS.BINARY, 0, 1,                      // ...
+            (int) IS.JMP, 22,                           // and repeat
+            // Label 36 - end loop
+            (int) IS.DROP, 0, // Drop the value
+            (int) IS.DROP, 0, // Drop the address
             (int) IS.HALT
         ];
 
-        TestSimpleCPU(20, program, "", "hello world!", false);
+        TestSimpleCPU(20, program, "", "hello world!", debug: false);
     }
 
     [Test]
@@ -45,46 +46,54 @@ public sealed partial class VirtualCPUTest
         {
             // Data section
             'w', 'r', 'i', 't', 'e', ' ', 's', 't', 'r', 'i', 'n', 'g', '\n', 0, // Ints 0-13 - phrase to output
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Ints 15-29 - empty string buffer
-            // Note: with the current input, the code will overflow and write over the code section
-            // Very safe innit?
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Ints 14-29 - empty string buffer
+            // Note: with long enough input, this will overflow and write over the code section
+            // Very safe innit? Smth smth buffer overflow attacks in ss14
 
             // Code section - int 30
-            (int) IS.PUSH, 0,                       // Push the address of the string onto the stack, acting as the counter
-            // Label 32 - begin print loop
-            (int) IS.LOAD, -1,                      // Load value from memory via address on the stack
-            (int) IS.JMPC, 0, 47, // Jump to next step if value is 0
-            (int) IS.OUT, 0,                        // Otherwise print it to the console
-            (int) IS.DROP,                          // And pop it
-            (int) IS.PUSH, 1,                       // Increment the address
+            // Jump over the function
+            (int) IS.JMP, 60,
+
+            // Label 32 - FUNCTION - write a null-terminated string to console specified by the address on the stack.
+            (int) IS.DUP, 1,                            // Copy the argument
+            // Label 34 - begin loop
+            (int) IS.LOAD_PSP, -1,                      // Load value from memory via address on the stack
+            (int) IS.JMPC_PSP, 48, (int) JumpType.Zero, // Jump to end if the value is zero
+            (int) IS.OUT, 0,                            // Otherwise print it to the console
+            (int) IS.PUSH, 1,                           // Increment the address
+            (int) IS.BINARY, 0, 1,                      // ...
+            (int) IS.JMP, 34,                           // and repeat
+            // label 48: function end
+            (int) IS.RET, 2, 1,                         // Clear 2 items from the stack, return, and clear 1 more value from the stack
+
+            (int) IS.INVALID,  0, 0, 0, 0, 0,  0, 0, 0, // Padding
+
+            // Label 60 - main
+            (int) IS.PUSH, 0,             // Push the address of the string onto the stack, acting as the counter
+            (int) IS.CALL, 32,            // Print the string
+
+            // Label 64 - Prepare read loop
+            (int) IS.PUSH, 14,                      // Push the address of the string onto the stack, acting as the counter
+            // Label 66 - read loop
+            (int) IS.IN, 0,                         // Read a character
+            (int) IS.DUP, 0,                        // Duplicate the character
+            (int) IS.DUP, 2,                        // Duplicate the address TODO THIS SUCKS ASS, ADD AN SWP INSTRUCTION OR SMTH!!!
+            (int) IS.STORE, -1,                     // Store the character at the address
+            (int) IS.JMPC, 90, (int) JumpType.Zero, // Jump if the character is null
+            (int) IS.PUSH, 1,                       // Otherwise increment the address
             (int) IS.BINARY, 0, 1,                  // ...
-            (int) IS.JMP, 32,                       // and repeat
-            // Label 47 - prepare input loop
-            (int) IS.DROP,                          // Drop the address
-            (int) IS.PUSH, 15,                      // Push the address of the buffer onto the stack
-            // Label 50 - begin input loop
-            (int) IS.IN, 0,                         // Read a char onto the stack
-            (int) IS.STORE, -1,                     // Store it in the buffer
-            (int) IS.JMPC, 0, 65,                   // Jump to next step if value is 0
-            (int) IS.DROP,                          // Otherwise pop it
-            (int) IS.PUSH, 1,                       // Increment the address
-            (int) IS.BINARY, 0, 1,                  // ...
-            (int) IS.JMP, 50,                       // and repeat
-            // Label 65 - prepare echo loop
-            (int) IS.PUSH, 15,                      // Push the address of the buffer onto the stack
-            // Label 67 - begin echo loop
-            (int) IS.LOAD, -1,                      // Load value from memory via address on the stack
-            (int) IS.JMPC, 0, 82,                   // Jump to end if value is 0
-            (int) IS.OUT, 0,                        // Otherwise print it to the console
-            (int) IS.DROP,                          // And pop it
-            (int) IS.PUSH, 1,                       // Increment the address
-            (int) IS.BINARY, 0, 1,                  // ...
-            (int) IS.JMP, 67,                       // and repeat
-            // Label 82 - end
+            (int) IS.JMP, 66,                       // and repeat
+            0, 0, 0, 0, // Padding
+
+            // Label 90 - end read loop
+            (int) IS.DROP, 0,  // Drop the address
+            (int) IS.DROP, 0,  // Drop the character
+            (int) IS.PUSH, 14, // Push the address of the string onto the stack
+            (int) IS.CALL, 32, // Print the string
             (int) IS.HALT
         };
 
-        TestSimpleCPU(30, program, "chicken nuggies\0", "write string\nchicken nuggies");
+        TestSimpleCPU(30, program, "chicken nuggies\0", "write string\nchicken nuggies", debug: false);
     }
 
     [Test]
@@ -107,16 +116,36 @@ public sealed partial class VirtualCPUTest
                 load wowie;
                 mul int; // * 25
 
-                out 0; out 0; out 0; // Print char 125 3 times
-                drop;
+                // Output char 125 two times
+                call printNoStackFree;
+                call printNoStackFree;
+
+                // This should output 0 and then 125 again
+                push 0;
+                call printStackFree;
+                call printStackFree;
 
                 halt;
+            }
+
+            // Print a character from the stack without removing it
+            .section printNoStackFree {
+                dup 1; // Copy the argument
+                out 0;
+                ret;
+            }
+
+            // Print a character from the stack and remove it
+            .section printStackFree {
+                dup 1; // Copy the argument
+                out 0;
+                ret 0 1;
             }
             """.Trim();
 
         var (code, entryPoint) = Assemble(asm);
         var c125 = (char) 125;
-        TestSimpleCPU(entryPoint, code, expectedOutput: $"{c125}{c125}{c125}", debug: true);
+        TestSimpleCPU(entryPoint, code, expectedOutput: $"{c125}{c125}\0{c125}", debug: false);
     }
 
     [Test]
@@ -126,37 +155,29 @@ public sealed partial class VirtualCPUTest
             .start code;
             .section data {
                 int repeats 8;
-                int i 0;
-                char word "meow", 0x20, 0;
+                char word "meow", 0x0A, 0;
             }
             .section code {
-                load repeats;
-                store i;
+                load repeats; // i = 8
 
                 sentenceLoop:
-                    drop;
                     push 0; // j = 0
                     wordLoop:
                         dup;
                         push word;
                         add int;
                         load -1;
-                        jmpc zero wordLoop_end;
+                        psp jmpc wordLoop_end zero;
                         out 0; // Load word[j] and print it if it isn't 0
-                        drop; // drop char
-                        drop; // drop addr
                         push 1;
                         add int; // j++
                     jmp wordLoop;
 
                     wordLoop_end:
-                    drop; drop; drop; // Drop j, addr, and letter
-                    load i;
+                    drop; drop; // Drop j and letter
                     push -1;
                     add int;
-                    store i;
-                    // Man I should really make jmpc and the like pop the stack
-                jmpc nonZero sentenceLoop;
+                psp jmpc sentenceLoop nonZero;
                 drop;
 
                 halt;
@@ -164,6 +185,6 @@ public sealed partial class VirtualCPUTest
         """;
 
         var (code, entryPoint) = Assemble(asm);
-        TestSimpleCPU(entryPoint, code, expectedOutput: $"meow\nmeow\nmeow\nmeow\nmeow\nmeow\nmeow\nmeow\n", debug: true);
+        TestSimpleCPU(entryPoint, code, expectedOutput: $"meow\nmeow\nmeow\nmeow\nmeow\nmeow\nmeow\nmeow\n", debug: false);
     }
 }

@@ -20,10 +20,9 @@ public sealed class VCPUAssemblyCompiler
 {
     private static readonly Dictionary<string, int> SimpleInstructions = new()
     {
-        {"nop", 0x00},
-        {"dup", 0x04},
-        {"drop", 0x05},
-        {"halt", 0xff},
+        {"nop",     (int) IS.NOP},
+        {"halt",    (int) IS.HALT},
+        {"invalid", (int) IS.INVALID}
     };
 
     private string _input = default!;
@@ -39,6 +38,9 @@ public sealed class VCPUAssemblyCompiler
     private int CurrentAddress => _output.Count;
     private string? _startSectionName;
     private Section? CurrentSection = null;
+
+    /// <summary>True if the current instruction is a "preserve PS" instruction. </summary>
+    private bool _inPSPInstruction = false;
 
     /// <summary>
     ///     Not null after Compile() is called if there were any errors during compilation.
@@ -70,6 +72,22 @@ public sealed class VCPUAssemblyCompiler
                 _errors.Add("Too many errors. Stopping compilation.");
                 break;
             }
+        }
+
+        if (Errored)
+            return (false, null, -1);
+
+        // Resolve labels
+        foreach (var (jumpAddr, label) in _labelledAddresses)
+        {
+            // Jump to label is only possible within the same section. Jump to section is allowed everywhere.
+            // TODO: disabled. Find a way to support referencing data labels everywhere?
+            if (_labels.Find(it => it.Name == label/* && it.inSection == CurrentSection*/) is { } targetLabel)
+                _output[jumpAddr] = targetLabel.StartAddress;
+            else if (_sections.Find(it => it.Name == label) is { } targetSection)
+                _output[jumpAddr] = targetSection.StartAddress;
+            else
+                Error($"Label {label} does not exist", jumpAddr);
         }
 
         if (Errored)
@@ -113,11 +131,15 @@ public sealed class VCPUAssemblyCompiler
                 return;
             }
 
+            // Output invalid instructions before and after the section
+            // This is to ensure the executor will never reach the end of section
+            // and immediately start executing the next section (which may be a procedure etc)
+            Write((int) IS.INVALID);
+
             var section = new Section(name, CurrentAddress);
             _sections.Add(section);
 
             // Pass 1 - read everything within
-            _labelledAddresses.Clear();
             while (!Match("}"))
             {
                 CurrentSection = section; // Inside of the loop in case of nested sections if those are ever added
@@ -130,18 +152,22 @@ public sealed class VCPUAssemblyCompiler
                 break;
             }
 
+            Write((int) IS.INVALID);
+
 
             // Pass 2 - resolve labels
-            CurrentSection = null;
-            foreach (var (jumpAddr, label) in _labelledAddresses)
-            {
-                if (_labels.Find(it => it.Name == label) is { } targetLabel)
-                    _output[jumpAddr] = targetLabel.StartAddress;
-                else if (_sections.Find(it => it.Name == label) is { } targetSection)
-                    _output[jumpAddr] = targetSection.StartAddress;
-                else
-                    Error($"Label {label} does not exist", jumpAddr);
-            }
+            // CurrentSection = null;
+            // foreach (var (jumpAddr, label) in _labelledAddresses)
+            // {
+            //     // Jump to label is only possible within the same section. Jump to section is allowed everywhere.
+            //     // TODO: disabled. Find a way to support referencing data labels everywhere?
+            //     if (_labels.Find(it => it.Name == label/* && it.inSection == CurrentSection*/) is { } targetLabel)
+            //         _output[jumpAddr] = targetLabel.StartAddress;
+            //     else if (_sections.Find(it => it.Name == label) is { } targetSection)
+            //         _output[jumpAddr] = targetSection.StartAddress;
+            //     // else
+            //     //     Error($"Label {label} does not exist", jumpAddr);
+            // }
 
             return;
         } else if (Match(".start")) {
@@ -150,7 +176,7 @@ public sealed class VCPUAssemblyCompiler
             EndOfStatement();
             return;
         } else if (Match(";")) {
-            return; // I don't know why it happens
+            return;
         }
 
         Error("Expected a top-level statement");
@@ -175,11 +201,16 @@ public sealed class VCPUAssemblyCompiler
             return;
         }
 
+        // Prefixes
+        _inPSPInstruction = Match("psp");
+
+        // Instrcution itself
         if (Identifier() is not {} name)
             return;
 
         // Identifier followed by a colon is a label
-        if (Match(":"))
+        // God, this is turning into such a mess
+        if (Match(":") && !_inPSPInstruction)
         {
             _labels.Add(new Label(name, CurrentAddress, CurrentSection));
             return;
@@ -206,15 +237,14 @@ public sealed class VCPUAssemblyCompiler
 
         switch (name)
         {
-            // Instructions with one integer argument
+            // Instructions with one relative/port argument
             case "out":
             case "in":
+            case "drop":
+            case "dup":
             {
                 if (Integer() is not { } addr)
-                {
-                    Error("Expected exactly one integer argument.");
-                    break;
-                }
+                    addr = 0; // Assuming 0 is the default. From IO it's the console port, for drop/dup it's the top of the stack.
 
                 WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
                 Write(addr);
@@ -222,20 +252,13 @@ public sealed class VCPUAssemblyCompiler
             }
 
             // Instructions with integer arguments that allow referencing labels
-            case "store":
             case "push":
             case "load":
+            case "store":
+            case "call":
             {
                 WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
-
-                if (Integer() is { } constant) {
-                    Write(constant);
-                } else if (Identifier() is { } label) {
-                    _labelledAddresses.Add((CurrentAddress, label));
-                    Write(int.MaxValue);
-                } else {
-                    Error("Expected address or label");
-                }
+                Write(LabelOrAddress());
 
                 break;
             }
@@ -244,18 +267,9 @@ public sealed class VCPUAssemblyCompiler
             case "jmpc":
             {
                 WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
+                Write(LabelOrAddress());
                 if (name == "jmpc")
                     Write((int) JumpTypeOrError());
-
-                if (Integer() is { } absoluteAddr)
-                    Write(absoluteAddr);
-                else if (Identifier() is { } label) {
-                    _labelledAddresses.Add((CurrentAddress, label));
-                    Write(int.MaxValue);
-                } else {
-                    Error("Expected jump address or label");
-                    SkipUntilTerminator();
-                }
 
                 break;
             }
@@ -293,6 +307,20 @@ public sealed class VCPUAssemblyCompiler
 
                 break;
             }
+
+            case "ret": {
+                int numBefore = 0, numAfter = 0;
+                if (Integer() is { } tmpNumBefore) {
+                    numBefore = tmpNumBefore;
+                    numAfter = Integer() ?? 0;
+                }
+
+                WriteInstruction(IS.RET);
+                Write(numBefore);
+                Write(numAfter);
+
+                break;
+            }
         }
         EndOfStatement();
     }
@@ -307,6 +335,25 @@ public sealed class VCPUAssemblyCompiler
         }
 
         SkipWS();
+    }
+
+    /// <summary>
+    ///     Read a literal address or a label.
+    ///     Returns int.MaxValue and queues dereferencing the address if it's a label
+    /// </summary>
+    /// <returns></returns>
+    private int LabelOrAddress()
+    {
+        if (Integer() is {} constant)
+            return constant;
+
+        if (Identifier() is { } label) {
+            _labelledAddresses.Add((CurrentAddress, label));
+            return int.MaxValue;
+        }
+
+        Error("Expected address or label");
+        return int.MaxValue;
     }
 
     private (int, int) GetLineNumberAndPosAt(int position)
@@ -406,15 +453,18 @@ public sealed class VCPUAssemblyCompiler
         if (!char.IsDigit(ch))
             return null;
 
-        // Special case: if it is 0 followed by an "x", it's a hex number
         var number = 0;
         if (Match("0x")) {
+            // Special case: if it is 0 followed by an "x", it's a hex number
             ch = char.ToLower(Peek());
             while (char.IsDigit(ch) || ch is >= 'a' and <= 'f')
             {
                 number = 16 * number + (char.IsDigit(ch) ? ch - '0' : ch - 'a' + 10);
                 ch = char.ToLower(Next());
             }
+        } else if (Match("onstack")) {
+            // Special case: the constant "onstack" is -1
+            return -1;
         } else {
             while (char.IsDigit(ch))
             {
@@ -535,7 +585,14 @@ public sealed class VCPUAssemblyCompiler
     /// <returns>Current char or '\0' if end of input.</returns>
     private char Peek() => _pos >= _input.Length ? '\0' : _input[_pos];
 
-    private void WriteInstruction(IS instruction) => _output.Add((int) instruction);
+    private void WriteInstruction(IS instruction)
+    {
+        int value = (int) instruction;
+        if (_inPSPInstruction)
+            value |= (int) IS.PRESERVE_STACK_MASK;
+
+        Write(value);
+    }
 
     private void Write(int value) => _output.Add(value);
 
