@@ -13,21 +13,24 @@
       shader: unshaded
     - state: printing
       shader: unshaded
-  - type: ItemSlots
+  - type: ItemSlots # TODO: move the components to shared so the whitelist can pass client-side
     slots:
       cpu:
         name: computer-slot-name-cpu
         startingItem: ComputerCPUBasic
+        swap: false
         whitelist:
           components: [CPU]
       memory:
         name: computer-slot-name-memory
         startingItem: ComputerMemoryBasic
+        swap: false
         whitelist:
           components: [Memory]
       storage:
         name: computer-slot-name-storage
         startingItem: ComputerHardDiskBasic
+        swap: false
         whitelist:
           components: [Memory]
   - type: ContainerContainer

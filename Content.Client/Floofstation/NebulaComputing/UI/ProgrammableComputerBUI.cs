@@ -10,7 +10,7 @@ public sealed class ProgrammableComputerBUI : BoundUserInterface
 
     public ProgrammableComputerBUI(EntityUid owner, Enum uiKey) : base(owner, uiKey) { }
 
-    public void Open()
+    protected override void Open()
     {
         if (Window == null)
             Window = this.CreateWindow<ProgrammableComputerWindow>();

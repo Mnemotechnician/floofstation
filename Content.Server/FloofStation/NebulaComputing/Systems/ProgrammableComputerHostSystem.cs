@@ -85,6 +85,16 @@ public sealed class ProgrammableComputerHostSystem : EntitySystem
         bool resetPersistent = false
     )
     {
+        bool TryGetContainerSlot(string name, [NotNullWhen(true)] out EntityUid? result)
+        {
+            result = null;
+            if (!_container.TryGetContainer(ent, name, out var maybeSlot))
+                return false;
+
+            result = (maybeSlot as ContainerSlot)?.ContainedEntity;
+            return result is not null;
+        }
+
         // Step 1. Resolve the CPU specs
         if (TryComp<CPUComponent>(ent, out var builtInCPU)
             && TryComp<MemoryComponent>(ent, out var builtInStack)
@@ -94,21 +104,21 @@ public sealed class ProgrammableComputerHostSystem : EntitySystem
         }
         else
         {
-            if (!_container.TryGetContainer(ent, ProgrammableComputerHostComponent.CPUContainerName, out var externalCPUContainer))
+            if (!TryGetContainerSlot(ProgrammableComputerHostComponent.CPUContainerName, out var externalCPUEnt))
             {
                 error = "programmable-computer-error-no-cpu";
                 return false;
             }
 
-            if (!TryComp<CPUComponent>(externalCPUContainer.Owner, out var externalCPU)
-                || !TryComp<MemoryComponent>(externalCPUContainer.Owner, out var externalStack)
+            if (!TryComp<CPUComponent>(externalCPUEnt, out var externalCPU)
+                || !TryComp<MemoryComponent>(externalCPUEnt, out var externalStack)
                 || !externalStack.Kind.HasFlag(MemoryType.CPUOperationStack))
             {
                 error = "programmable-computer-error-bad-cpu";
                 return false;
             }
 
-            ent.Comp.CPU = (externalCPUContainer.Owner, externalCPU, externalStack);
+            ent.Comp.CPU = (externalCPUEnt.Value, externalCPU, externalStack);
         }
 
         // Step 2. Resolve the memory specs
@@ -116,14 +126,14 @@ public sealed class ProgrammableComputerHostSystem : EntitySystem
             ent.Comp.Memory = (ent.Owner, builtInMemory);
         else
         {
-            if (!_container.TryGetContainer(ent, ProgrammableComputerHostComponent.MemoryContainerName, out var externalMemoryContainer))
+            if (!TryGetContainerSlot(ProgrammableComputerHostComponent.MemoryContainerName, out var externalMemoryEnt))
             {
                 error = "programmable-computer-error-no-memory";
                 return false;
             }
 
             // Praying an hoping the ItemSlots whitelist will prevent this from ever throwing an exception
-            ent.Comp.Memory = (externalMemoryContainer.Owner, Comp<MemoryComponent>(externalMemoryContainer.Owner));
+            ent.Comp.Memory = (externalMemoryEnt.Value, Comp<MemoryComponent>(externalMemoryEnt.Value));
         }
 
         // Step 3. Resolve the storage specs
@@ -131,14 +141,14 @@ public sealed class ProgrammableComputerHostSystem : EntitySystem
             ent.Comp.Storage = (ent.Owner, builtInStorage);
         else
         {
-            if (!_container.TryGetContainer(ent, ProgrammableComputerHostComponent.StorageContainerName, out var externalStorageContainer))
+            if (!TryGetContainerSlot(ProgrammableComputerHostComponent.CPUContainerName, out var externalStorageEnt))
             {
                 error = "programmable-computer-error-no-storage";
                 return false;
             }
 
             // See above
-            ent.Comp.Storage = (externalStorageContainer.Owner, Comp<MemoryComponent>(externalStorageContainer.Owner));
+            ent.Comp.Storage = (externalStorageEnt.Value, Comp<MemoryComponent>(externalStorageEnt.Value));
         }
 
         // Step 4. Reset the memory if requested or necessary
@@ -159,12 +169,17 @@ public sealed class ProgrammableComputerHostSystem : EntitySystem
 
         if (executor is null || resetNonPersistent)
         {
+            if (executor is {} oldExecutor)
+                executorThread.RemoveProcessedCPU(oldExecutor);
+
             firstRun = true;
             executor = new(
                 new VirtualCPUECSDataProvider(ent.Comp),
                 new VirtualCPUECSIOProvider(ent.Comp),
                 cpuStack);
             executor.Halted = true;
+
+            executorThread.AddProcessedCPU(executor);
         }
 
         if (resetPersistent || firstRun || storage is null)
