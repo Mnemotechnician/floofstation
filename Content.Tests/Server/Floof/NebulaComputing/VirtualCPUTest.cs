@@ -10,6 +10,9 @@ namespace Content.Tests.Server.Floof.NebulaComputing ;
 using IS = InstructionSet;
 
 
+[TestFixture]
+[TestOf(typeof(VirtualCPU))]
+[TestOf(typeof(VCPUAssemblyCompiler))]
 public sealed partial class VirtualCPUTest
 {
     [Test]

@@ -1,5 +1,7 @@
 using Content.Server.FloofStation.NebulaComputing.Systems;
 using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
+using Content.Shared.FloofStation.NebulaComputing.UI;
+using Content.Shared.FloofStation.NebulaComputing.Util;
 using Robust.Shared.GameStates;
 
 
@@ -20,6 +22,9 @@ public sealed partial class ProgrammableComputerHostComponent : Component
 
     [NonSerialized, ViewVariables]
     public Entity<MemoryComponent>? Memory, Storage;
+
+    [DataField]
+    public CircularQueue<char> ConsoleOutput = new(ProgrammableComputerBUIState.MaxConsoleChars);
 
 
     [ViewVariables]
