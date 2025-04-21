@@ -7,6 +7,8 @@ namespace Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 [StructLayout(LayoutKind.Explicit)]
 public struct CPUMemoryCell
 {
+    public static CPUMemoryCell Zero => new();
+
     [FieldOffset(0)]
     public uint UInt32;
 

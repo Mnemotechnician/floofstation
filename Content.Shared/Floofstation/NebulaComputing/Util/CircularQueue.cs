@@ -63,6 +63,13 @@ public class CircularQueue<T> : IEnumerable<T>
         return _queue[_front];
     }
 
+    public void ClearFast()
+    {
+        Count = 0;
+        _front = 0;
+        _rear = 0;
+    }
+
     public bool IsEmpty() => Count == 0;
 
     public bool IsFull() => Count == Capacity;
@@ -90,21 +97,21 @@ public class CircularQueue<T> : IEnumerable<T>
         }
     }
 
+    public T[] ToArray()
+    {
+        var array = new T[Count];
+        int index = 0;
+        foreach (var item in this)
+            array[index++] = item;
+        return array;
+    }
+
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 public static class CircularQueueExtensions
 {
-    public static string ToString(this CircularQueue<char> queue)
-    {
-        var buffer = new char[queue.Count];
-        int index = 0;
-
-        foreach (var c in queue)
-            buffer[index++] = c;
-
-        return new string(buffer);
-    }
+    public static string AsString(this CircularQueue<char> queue) => new(queue.ToArray());
 
     public static void Append(this CircularQueue<char> queue, string str)
     {

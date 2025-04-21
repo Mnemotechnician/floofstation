@@ -14,7 +14,7 @@ using Robust.Shared.Containers;
 namespace Content.Server.FloofStation.NebulaComputing.Systems;
 
 
-public sealed class ProgrammableComputerHostSystem : EntitySystem
+public sealed partial class ProgrammableComputerHostSystem : EntitySystem
 {
     [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
@@ -175,7 +175,7 @@ public sealed class ProgrammableComputerHostSystem : EntitySystem
             firstRun = true;
             executor = new(
                 new VirtualCPUECSDataProvider(ent.Comp),
-                new VirtualCPUECSIOProvider(ent.Comp),
+                new VirtualCPUECSIOProvider(ent.Comp, this),
                 cpuStack);
             executor.Halted = true;
 
@@ -184,6 +184,8 @@ public sealed class ProgrammableComputerHostSystem : EntitySystem
 
         if (resetPersistent || firstRun || storage is null)
             storage = new CPUMemoryCell[ent.Comp.Storage.Value.Comp.Capacity];
+
+        SetupPorts(ent);
 
         ent.Comp.SetupDone = true;
         error = null;

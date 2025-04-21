@@ -8,7 +8,7 @@ using Robust.Shared.GameStates;
 namespace Content.Server.FloofStation.NebulaComputing.Components;
 
 
-[RegisterComponent, Access(typeof(ProgrammableComputerHostSystem), Other = AccessPermissions.Read)]
+[RegisterComponent, Access(typeof(ProgrammableComputerHostSystem), typeof(VirtualCPUIOProvider), Other = AccessPermissions.Read)]
 public sealed partial class ProgrammableComputerHostComponent : Component
 {
     public const string CPUContainerName = "cpu", MemoryContainerName = "memory", StorageContainerName = "storage";
@@ -18,15 +18,18 @@ public sealed partial class ProgrammableComputerHostComponent : Component
     public bool SetupDone;
 
     [NonSerialized, ViewVariables]
+    public int OutputPorts, InputPorts;
+
+    [NonSerialized, ViewVariables]
     public Entity<CPUComponent, MemoryComponent>? CPU;
 
     [NonSerialized, ViewVariables]
     public Entity<MemoryComponent>? Memory, Storage;
 
-    [DataField]
-    public CircularQueue<char> ConsoleOutput = new(ProgrammableComputerBUIState.MaxConsoleChars);
+    [NonSerialized, ViewVariables]
+    public VirtualCPUECSDataProvider DataProvider;
 
-
+    // Shorthands
     [ViewVariables]
     public CPUMemoryCell[]? CPUStackData => CPU?.Comp2.StackData;
 

@@ -43,6 +43,24 @@
       enum.ProgrammableComputerUiKey.Key:
         type: ProgrammableComputerBUI
   - type: ProgrammableComputerHost
+  # Device links
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: WirelessNetworkConnection
+    range: 25
+  - type: DeviceLinkSource
+    ports:
+    - CustomPort1
+    - CustomPort2
+    - CustomPort3
+    - CustomPort4
+  - type: DeviceLinkSink
+    ports:
+    - CustomPort1
+    - CustomPort2
+    - CustomPort3
+    - CustomPort4
 
 
 

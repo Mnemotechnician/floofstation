@@ -16,5 +16,6 @@ public enum CPUErrorCode : byte
     StackOverflow      = 0x03,
     StackUnderflow     = 0x04,
     DivisionByZero     = 0x05,
-    InvalidType        = 0x06
+    InvalidType        = 0x06,
+    InvalidPort        = 0x07
 }
