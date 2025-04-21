@@ -40,7 +40,7 @@
   description: A protogen's favorite snack.
   components:
   - type: Sprite
-    state: memory-basic
+    state: ram-basic
   - type: Memory
     capacity: 10000 # In bytes.
     kind: RandomAccess
