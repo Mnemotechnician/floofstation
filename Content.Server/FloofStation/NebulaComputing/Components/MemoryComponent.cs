@@ -1,3 +1,4 @@
+using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
@@ -21,10 +22,10 @@ public sealed partial class MemoryComponent : Component
     public MemoryType Kind;
 
     /// <summary>
-    ///     The actual memory of the computer. Created at runtime.
+    ///     The actual memory of the computer. Created at runtime. Which fields are initialized depends on the <see cref="Kind"/>.
     /// </summary>
     [NonSerialized]
-    public int[]? Data;
+    public CPUMemoryCell[]? StackData, RandomAccessData, PersistentData;
 }
 
 [Serializable, Flags]

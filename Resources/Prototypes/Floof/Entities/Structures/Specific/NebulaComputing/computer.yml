@@ -37,7 +37,7 @@
       storage: !type:ContainerSlot
   - type: UserInterface
     interfaces:
-      enum.ProgrammableComputerBUI.Key:
+      enum.ProgrammableComputerUiKey.Key:
         type: ProgrammableComputerBUI
   - type: ProgrammableComputerHost
 

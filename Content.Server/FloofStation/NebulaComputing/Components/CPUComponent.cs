@@ -1,7 +1,3 @@
-using Robust.Shared.GameStates;
-using Robust.Shared.Serialization;
-
-
 namespace Content.Server.FloofStation.NebulaComputing.Components;
 
 
@@ -14,4 +10,7 @@ public sealed partial class CPUComponent : Component
 {
     [DataField(required: true)]
     public int InstructionRate;
+
+    [NonSerialized]
+    public VirtualCPU.VirtualCPU? Executor;
 }

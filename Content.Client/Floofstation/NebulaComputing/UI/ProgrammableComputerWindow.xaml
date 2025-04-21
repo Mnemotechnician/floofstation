@@ -1,0 +1,12 @@
+﻿<controls:FancyWindow
+    xmlns="https://spacestation14.io"
+    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+    xmlns:ui="clr-namespace:Content.Client.Floofstation.NebulaComputing.UI"
+    MaxHeight="600"
+    MinWidth="800">
+
+    <TabContainer>
+        <ui:ConsoleOutputTab/>
+        <ui:AssemblerTab/>
+    </TabContainer>
+</controls:FancyWindow>

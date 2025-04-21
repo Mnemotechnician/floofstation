@@ -18,14 +18,20 @@ public sealed class VirtualCPU(
     public VirtualCPUDataProvider DataProvider = dataProvider;
     public VirtualCPUIOProvider IOProvider = ioProvider;
     /// <summary>
+    ///     Instructions per second, for use in <see cref="VirtualCPUExecutorThread"/>
+    /// </summary>
+    public int InstructionRate = 1;
+    /// <summary>
     ///     A function to handle errors in the CPU.
     ///     Receives the error code and program counter as parameters.
     /// </summary>
+    /// <remarks>Not guaranteed to be executed on the main game thread! Use with caution!</remarks>
     public event Action<CPUErrorCode, int>? ErrorHandler;
     /// <summary>
     ///     A function to debug the CPU. Invoked on each tick with the current opcode as the parameter.
     ///     If it returns true, the processor waits on the instruction until it returns false.
     /// </summary>
+    /// <remarks>Not guaranteed to be executed on the main game thread! Use with caution!</remarks>
     public Func<IS, bool>? Debugger;
 
     private CPUMemoryCell[] _operationStack = operationStack;
@@ -43,7 +49,7 @@ public sealed class VirtualCPU(
 
     public int ProgramCounter { get; set; }
 
-    public bool Halted { get; private set; } = true;
+    public volatile bool Halted = true;
     /// <summary>
     ///     If set to true during the execution of an instruction,
     ///     the CPU will not proceed and will resume from the same instruction later.
