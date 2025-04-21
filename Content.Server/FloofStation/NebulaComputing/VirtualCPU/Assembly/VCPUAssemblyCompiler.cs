@@ -126,10 +126,7 @@ public sealed class VCPUAssemblyCompiler
             }
 
             if (!MatchOrError("{"))
-            {
-                Error("Section has no body (missing opening brace)");
                 return;
-            }
 
             // Output invalid instructions before and after the section
             // This is to ensure the executor will never reach the end of section
@@ -145,29 +142,16 @@ public sealed class VCPUAssemblyCompiler
                 CurrentSection = section; // Inside of the loop in case of nested sections if those are ever added
                 SectionStatement();
 
+                _inPSPInstruction = false; // In case SectionStatement() set it
+
                 if (_pos < _input.Length)
                     continue;
 
-                Error("Unexpected end of input");
+                Error("Expected a closing brace");
                 break;
             }
 
             Write((int) IS.INVALID);
-
-
-            // Pass 2 - resolve labels
-            // CurrentSection = null;
-            // foreach (var (jumpAddr, label) in _labelledAddresses)
-            // {
-            //     // Jump to label is only possible within the same section. Jump to section is allowed everywhere.
-            //     // TODO: disabled. Find a way to support referencing data labels everywhere?
-            //     if (_labels.Find(it => it.Name == label/* && it.inSection == CurrentSection*/) is { } targetLabel)
-            //         _output[jumpAddr] = targetLabel.StartAddress;
-            //     else if (_sections.Find(it => it.Name == label) is { } targetSection)
-            //         _output[jumpAddr] = targetSection.StartAddress;
-            //     // else
-            //     //     Error($"Label {label} does not exist", jumpAddr);
-            // }
 
             return;
         } else if (Match(".start")) {
@@ -464,6 +448,7 @@ public sealed class VCPUAssemblyCompiler
             }
         } else if (Match("onstack")) {
             // Special case: the constant "onstack" is -1
+            // This should really be handled by the relevant instructions, but oh well
             return -1;
         } else {
             while (char.IsDigit(ch))
