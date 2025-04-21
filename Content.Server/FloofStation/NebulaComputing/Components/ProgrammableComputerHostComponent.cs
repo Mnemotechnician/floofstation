@@ -1,10 +1,10 @@
 using Robust.Shared.GameStates;
 
 
-namespace Content.Shared.FloofStation.NebulaComputing.Components;
+namespace Content.Server.FloofStation.NebulaComputing.Components;
 
 
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent]
 public sealed partial class ProgrammableComputerHostComponent : Component
 {
     // References for easier future usage

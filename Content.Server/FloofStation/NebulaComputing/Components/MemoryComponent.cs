@@ -2,22 +2,22 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
 
-namespace Content.Shared.FloofStation.NebulaComputing.Components;
+namespace Content.Server.FloofStation.NebulaComputing.Components;
 
 
 /// <summary>
 ///     The memory bank of a programmable computer.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent]
 public sealed partial class MemoryComponent : Component
 {
     /// <summary>
     ///     Storage capacity, in bytes.
     /// </summary>
-    [DataField(required: true), AutoNetworkedField]
+    [DataField(required: true)]
     public int Capacity;
 
-    [DataField(required: true), AutoNetworkedField]
+    [DataField(required: true)]
     public MemoryType Kind;
 
     /// <summary>
@@ -27,7 +27,7 @@ public sealed partial class MemoryComponent : Component
     public int[]? Data;
 }
 
-[Serializable, NetSerializable, Flags]
+[Serializable, Flags]
 public enum MemoryType : int
 {
     /// <summary>

@@ -42,7 +42,7 @@
   - type: Sprite
     state: memory-basic
   - type: Memory
-    capacity: 100000 # In bytes.
+    capacity: 10000 # In bytes.
     kind: RandomAccess
 
 # Storage

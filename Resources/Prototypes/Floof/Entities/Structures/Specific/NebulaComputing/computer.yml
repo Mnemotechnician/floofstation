@@ -13,7 +13,6 @@
       shader: unshaded
     - state: printing
       shader: unshaded
-
   - type: ItemSlots
     slots:
       cpu:
@@ -31,21 +30,15 @@
         startingItem: ComputerHardDiskBasic
         whitelist:
           components: [Memory]
-
   - type: ContainerContainer
     containers:
       cpu: !type:ContainerSlot
       memory: !type:ContainerSlot
       storage: !type:ContainerSlot
-
   - type: UserInterface
     interfaces:
       enum.ProgrammableComputerBUI.Key:
         type: ProgrammableComputerBUI
-
-  - type: ActivatableUI
-    key: enum.ProgrammableComputerBUI.Key
-
   - type: ProgrammableComputerHost
 
 
