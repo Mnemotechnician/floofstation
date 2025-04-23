@@ -9,13 +9,13 @@ namespace Content.Tests.Server.Floof.NebulaComputing;
 
 
 [TestFixture]
-[TestOf(typeof(CircularQueue<int>))]
+[TestOf(typeof(CircularQueue<>))]
 public sealed class CircularQueueTest
 {
     [Test]
     public void TestSimpleQueue()
     {
-        var queue = new CircularQueue<int>(3);
+        var queue = new IntCircularQueue(3);
         queue.Enqueue(1);
         queue.Enqueue(2);
         queue.Enqueue(3);
@@ -40,7 +40,7 @@ public sealed class CircularQueueTest
     {
         object objA = new object(), objB = "abc", objC = new object(), objD = this;
 
-        var queue = new CircularQueue<object>(3);
+        var queue = new ObjectCircularQueue(3);
         queue.Enqueue(objA);
         queue.Enqueue(objB);
         queue.Enqueue(objC);

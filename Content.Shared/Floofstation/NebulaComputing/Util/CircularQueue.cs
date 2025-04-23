@@ -7,16 +7,19 @@ namespace Content.Shared.FloofStation.NebulaComputing.Util;
 
 /// <summary>
 ///     A circular array-based queue with O(1) write and read operations and limited capacity.
-///     When the queue is full and a new element is added, the oldest element is overwritten.
+///     When the queue is full and a new element is added, the oldest element is overwritten.<br/><br/>
+///
+///     Useful for things like terminal outputs.
 /// </summary>
-/// <remarks>Useful for things like terminal outputs.</remarks>
-[Serializable, NetSerializable]
-public class CircularQueue<T> : IEnumerable<T>
+/// <remarks>The base class is kept abstract because NetSerializer doesn't support generics. Use specific types instead.</remarks>
+/// <seealso cref="CharCircularQueue"/> <seealso cref="IntCircularQueue"/> <seealso cref="ObjectCircularQueue"/>
+[Serializable]
+public abstract class CircularQueue<T> : IEnumerable<T> where T : notnull
 {
     private T[] _queue;
     private int _front;
     private int _rear;
-    public int Capacity { get; }
+    public int Capacity { get; private set; }
     public int Count { get; private set; }
 
     public CircularQueue(int size)
@@ -37,7 +40,7 @@ public class CircularQueue<T> : IEnumerable<T>
         _queue[_rear] = item;
 
         if (IsFull())
-            _front = (_front + 1) % Capacity; // Move front to override the oldest element
+            _front = (_front + 1) % Capacity; // Move front as the oldest element is now overwritten
         else
             Count++;
     }
@@ -107,6 +110,24 @@ public class CircularQueue<T> : IEnumerable<T>
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+[Serializable, NetSerializable]
+public sealed class IntCircularQueue : CircularQueue<int>
+{
+    public IntCircularQueue(int size) : base(size) { }
+}
+
+[Serializable, NetSerializable]
+public sealed class CharCircularQueue : CircularQueue<char>
+{
+    public CharCircularQueue(int size) : base(size) { }
+}
+
+[Serializable, NetSerializable]
+public sealed class ObjectCircularQueue : CircularQueue<object>
+{
+    public ObjectCircularQueue(int size) : base(size) { }
 }
 
 public static class CircularQueueExtensions

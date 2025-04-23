@@ -10,17 +10,17 @@ namespace Content.Server.FloofStation.NebulaComputing.Systems;
 ///     Provides a bridge between a virutal CPU I/O and the entity-component system.
 /// </summary>
 [Serializable]
-public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent comp, ProgrammableComputerHostSystem system) : VirtualCPUIOProvider
+public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostComponent> ent, ProgrammableComputerHostSystem system) : VirtualCPUIOProvider
 {
     /// <summary>How many inputs a port can queue up before they start overwriting each other.</summary>
     /// <remarks>This is very unrealistic, but it's a necessary sacrifice because CPUs aren't updated on each game tick.</remarks>
     public const int PortQueueSize = 16;
 
-    private CircularQueue<char> _consoleOutput = new(ProgrammableComputerBUIState.MaxOutputChars);
-    private CircularQueue<int> _consoleInputKeyCodes = new(ProgrammableComputerBUIState.MaxInputKeyCodes);
+    private CharCircularQueue _consoleOutput = new(ProgrammableComputerBUIState.MaxOutputChars);
+    private IntCircularQueue _consoleInputKeyCodes = new(ProgrammableComputerBUIState.MaxInputKeyCodes);
 
-    private Dictionary<int, CircularQueue<CPUMemoryCell>> _inputPortQueues = new();
-    private Dictionary<int, CircularQueue<CPUMemoryCell>> _outputPortQueues = new();
+    private Dictionary<int, IntCircularQueue> _inputPortQueues = new();
+    private Dictionary<int, IntCircularQueue> _outputPortQueues = new();
 
     // The below methods may be called from different threads. I should be concerned about thread safety.
     public override bool TryWrite(int port, CPUMemoryCell message)
@@ -29,7 +29,7 @@ public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent co
         {
             case ConsolePort:
                 lock (_consoleOutput)
-                    _consoleOutput.Enqueue((char)message.Int32);
+                    _consoleOutput.Enqueue((char) message.Int32);
                 return true;
 
             case DiskPort:
@@ -38,7 +38,7 @@ public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent co
 
             default:
                 var portNumber = port - FirstPinPort;
-                if (portNumber < 0 || portNumber >= comp.OutputPorts)
+                if (portNumber < 0 || portNumber >= ent.Comp.OutputPorts)
                     throw new CPUExecutionException(CPUErrorCode.InvalidPort);
 
                 lock (_outputPortQueues)
@@ -47,7 +47,8 @@ public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent co
                     if (queue.IsFull())
                         return false; // Make the cpu wait
 
-                    queue.Enqueue(message);
+                    queue.Enqueue(message.Int32);
+                    system.MarkForPortsUpdate(ent);
                 }
 
                 return true;
@@ -74,7 +75,7 @@ public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent co
 
             default:
                 var portNumber = port - FirstPinPort;
-                if (portNumber < 0 || portNumber >= comp.InputPorts)
+                if (portNumber < 0 || portNumber >= ent.Comp.InputPorts)
                     throw new CPUExecutionException(CPUErrorCode.InvalidPort);
 
                 lock (_consoleInputKeyCodes)
@@ -82,7 +83,7 @@ public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent co
                     if (!_inputPortQueues.TryGetValue(portNumber, out var queue) || queue.IsEmpty())
                         return (false, CPUMemoryCell.Zero);
 
-                    return (true, queue.Dequeue());
+                    return (true, CPUMemoryCell.FromInt32(queue.Dequeue()));
                 }
         }
     }
@@ -95,11 +96,11 @@ public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent co
     }
 
     [Access(typeof(ProgrammableComputerHostSystem), Other = AccessPermissions.None)]
-    public Dictionary<int, CPUMemoryCell[]> GetAndClearPortOutputs()
+    public Dictionary<int, int[]> GetAndClearPortOutputs()
     {
         lock (_outputPortQueues)
         {
-            var res = new Dictionary<int, CPUMemoryCell[]>(_outputPortQueues.Count);
+            var res = new Dictionary<int, int[]>(_outputPortQueues.Count);
             foreach (var (port, queue) in _outputPortQueues)
             {
                 res[port] = queue.ToArray();
@@ -116,18 +117,18 @@ public sealed class VirtualCPUECSIOProvider(ProgrammableComputerHostComponent co
             _consoleInputKeyCodes.Enqueue(keyCode);
     }
 
-    public bool TryWritePinInput(int port, CPUMemoryCell data)
+    public bool TryWritePortInput(int port, CPUMemoryCell data)
     {
-        if (port < 0 || port >= comp.InputPorts)
+        if (port < 0 || port >= ent.Comp.InputPorts)
             return false;
 
         lock (_inputPortQueues)
-            GetPortQueueOrDefault(_inputPortQueues, port).Enqueue(data);
+            GetPortQueueOrDefault(_inputPortQueues, port).Enqueue(data.Int32);
 
         return true;
     }
 
-    private CircularQueue<T> GetPortQueueOrDefault<T>(Dictionary<int, CircularQueue<T>> queues, int index)
+    private IntCircularQueue GetPortQueueOrDefault(Dictionary<int, IntCircularQueue> queues, int index)
     {
         if (!queues.TryGetValue(index, out var queue))
             queues[index] = queue = new(PortQueueSize);

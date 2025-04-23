@@ -450,7 +450,10 @@ public abstract class VirtualCPUDataProvider
 /// </summary>
 public abstract class VirtualCPUIOProvider
 {
-    public const int ConsolePort = 0, DiskPort = 1, FirstPinPort = 2;
+    public const int ConsolePort = 0,
+                     DiskPort = 1,
+                     Reserved = 10,
+                     FirstPinPort = Reserved + 1;
 
     public abstract bool TryWrite(int port, CPUMemoryCell message);
 

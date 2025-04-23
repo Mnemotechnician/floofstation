@@ -27,7 +27,7 @@ public sealed partial class ProgrammableComputerHostComponent : Component
     public Entity<MemoryComponent>? Memory, Storage;
 
     [NonSerialized, ViewVariables]
-    public VirtualCPUECSDataProvider DataProvider;
+    public VirtualCPUECSIOProvider IOProvider;
 
     // Shorthands
     [ViewVariables]

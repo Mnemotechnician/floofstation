@@ -2,10 +2,10 @@
     xmlns="https://spacestation14.io"
     xmlns:controls="clr-namespace:Content.Client.Floofstation.NebulaComputing.UI">
 
-    <ScrollContainer HorizontalExpand="True" VerticalExpand="True">
-        <BoxContainer Orientation="Vertical">
-            <Label Text="This is a programmable computer, a cutting edge technology developed by Nanotrasen." />
-            <Label Text="It can be programmed in three ways: by inserting raw bytecode, by writing assembly code, and by writing code in a high-level C-like language (WIP)." />
+    <ScrollContainer HorizontalExpand="True" VerticalExpand="True" HScrollEnabled="False">
+        <BoxContainer Orientation="Vertical" HorizontalExpand="True">
+            <RichTextLabel Text="This is a programmable computer, a cutting edge technology developed by Nanotrasen." Margin="5"/>
+            <RichTextLabel Text="It can be programmed in three ways: by inserting raw bytecode, by writing assembly code, and by writing code in a high-level C-like language (WIP)." Margin="5" />
         </BoxContainer>
     </ScrollContainer>
 

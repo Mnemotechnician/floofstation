@@ -28,6 +28,8 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnGameRestart);
         SubscribeLocalEvent<ProgrammableComputerHostComponent, AfterInteractEvent>(OnComputerClicked);
         SubscribeLocalEvent<ProgrammableComputerHostComponent, GetVerbsEvent<InteractionVerb>>(OnGetComputerVerbs);
+
+        InitializePortsHandling();
     }
 
     private void OnGameStart(PostGameMapLoad ev)
@@ -167,6 +169,8 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
             memory = new CPUMemoryCell[ent.Comp.Memory.Value.Comp.Capacity];
         }
 
+        ent.Comp.IOProvider ??= new VirtualCPUECSIOProvider(ent, this);
+
         if (executor is null || resetNonPersistent)
         {
             if (executor is {} oldExecutor)
@@ -175,7 +179,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
             firstRun = true;
             executor = new(
                 new VirtualCPUECSDataProvider(ent.Comp),
-                new VirtualCPUECSIOProvider(ent.Comp, this),
+                ent.Comp.IOProvider,
                 cpuStack);
             executor.Halted = true;
 
