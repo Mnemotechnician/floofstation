@@ -8,10 +8,14 @@ namespace Content.Shared.FloofStation.NebulaComputing.UI;
 [Serializable, NetSerializable]
 public sealed class ProgrammableComputerBUIState : BoundUserInterfaceState
 {
-    public const int MaxOutputChars = 2000, MaxInputKeyCodes = 100;
+    public const int MaxOutputChars = 120 * 80, MaxInputKeyCodes = 100;
 
     public bool IsRunning;
     public CircularQueue<char> ConsoleOutput;
+
+    // Assembler state
+    public string? LastRunAssembly;
+    public bool IsActivelyAssembling;
 
     public ProgrammableComputerBUIState(bool isRunning, CircularQueue<char> consoleOutput)
     {

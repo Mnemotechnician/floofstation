@@ -2,5 +2,5 @@
     xmlns="https://spacestation14.io"
     xmlns:controls="clr-namespace:Content.Client.Floofstation.NebulaComputing.UI">
 
-    <Label Text="Testums"/>
+    <Label Name="Output"/>
 </controls:ConsoleOutputTab>

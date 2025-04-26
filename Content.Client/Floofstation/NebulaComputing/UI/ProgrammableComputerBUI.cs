@@ -1,3 +1,4 @@
+using Content.Shared.FloofStation.NebulaComputing.UI.Events;
 using Robust.Client.UserInterface;
 
 
@@ -13,8 +14,15 @@ public sealed class ProgrammableComputerBUI : BoundUserInterface
     protected override void Open()
     {
         if (Window == null)
+        {
             Window = this.CreateWindow<ProgrammableComputerWindow>();
+            Window.OnAction += OnAction;
+        }
 
         Window.Open();
     }
+
+    private void OnAction(PCActionRequest.Action action) => SendMessage(new PCActionRequest { Act = action });
+
+    private void OnAssemblerRun(string code) => SendMessage(new AssemblerRunRequest { Code = code });
 }

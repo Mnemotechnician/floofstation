@@ -30,6 +30,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         SubscribeLocalEvent<ProgrammableComputerHostComponent, GetVerbsEvent<InteractionVerb>>(OnGetComputerVerbs);
 
         InitializePortsHandling();
+        InitializeUI();
     }
 
     private void OnGameStart(PostGameMapLoad ev)

@@ -27,9 +27,9 @@
         </PanelContainer.PanelOverride>
 
         <TabContainer Name="TabSelector">
-            <ui:ConsoleOutputTab/>
-            <ui:AssemblerTab/>
-            <ui:InfoTab/>
+            <ui:ConsoleOutputTab Name="Console"/>
+            <ui:AssemblerTab Name="Assembler"/>
+            <ui:InfoTab Name="Info"/>
         </TabContainer>
     </PanelContainer>
 </controls:FancyWindow>

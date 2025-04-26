@@ -11,10 +11,10 @@ namespace Content.Shared.FloofStation.NebulaComputing.Util;
 ///
 ///     Useful for things like terminal outputs.
 /// </summary>
-/// <remarks>The base class is kept abstract because NetSerializer doesn't support generics. Use specific types instead.</remarks>
+/// <remarks>The base class is kept because NetSerializer doesn't support generics. Use specific types instead.</remarks>
 /// <seealso cref="CharCircularQueue"/> <seealso cref="IntCircularQueue"/> <seealso cref="ObjectCircularQueue"/>
-[Serializable]
-public abstract class CircularQueue<T> : IEnumerable<T> where T : notnull
+[Serializable, Virtual]
+public class CircularQueue<T> : IEnumerable<T> where T : notnull
 {
     private T[] _queue;
     private int _front;
