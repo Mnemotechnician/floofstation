@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Server.FloofStation.NebulaComputing.Components;
 using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
+using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Assembly;
 using Content.Server.GameTicking;
 using Content.Shared.FloofStation.NebulaComputing.UI;
 using Content.Shared.GameTicking;
@@ -9,6 +10,7 @@ using Content.Shared.Popups;
 using Content.Shared.Storage;
 using Content.Shared.Verbs;
 using Robust.Shared.Containers;
+using Robust.Shared.CPUJob.JobQueues.Queues;
 
 
 namespace Content.Server.FloofStation.NebulaComputing.Systems;
@@ -20,7 +22,8 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
 
-    private readonly VirtualCPUExecutorThread executorThread = new();
+    private readonly VirtualCPUExecutorThread _executorThread = new();
+    private readonly VirtualCPUAsmCompilerThread _asmCompilerThread = new();
 
     public override void Initialize()
     {
@@ -35,18 +38,21 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
 
     private void OnGameStart(PostGameMapLoad ev)
     {
-        if (executorThread.Running)
+        if (_executorThread.Running || _asmCompilerThread.Running)
         {
-            Log.Warning("Executor thread is already running? Attempting to stop it.");
-            executorThread.Stop();
+            Log.Warning("Executor or asm thread is already running? Attempting to stop it.");
+            _executorThread.Stop();
+            _asmCompilerThread.Stop();
         }
 
-        executorThread.Start();
+        _executorThread.Start();
+        _asmCompilerThread.Start();
     }
 
     private void OnGameRestart(RoundRestartCleanupEvent ev)
     {
-        executorThread.Stop();
+        _executorThread.Stop();
+        _asmCompilerThread.Stop();
     }
 
     private void OnComputerClicked(Entity<ProgrammableComputerHostComponent> ent, ref AfterInteractEvent args)
@@ -175,7 +181,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         if (executor is null || resetNonPersistent)
         {
             if (executor is {} oldExecutor)
-                executorThread.RemoveProcessedCPU(oldExecutor);
+                _executorThread.RemoveProcessedCPU(oldExecutor);
 
             firstRun = true;
             executor = new(
@@ -184,7 +190,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
                 cpuStack);
             executor.Halted = true;
 
-            executorThread.AddProcessedCPU(executor);
+            _executorThread.AddProcessedCPU(executor);
         }
 
         if (resetPersistent || firstRun || storage is null)

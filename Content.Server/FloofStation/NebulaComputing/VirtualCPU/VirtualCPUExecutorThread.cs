@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Threading;
+using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Util;
 using ThreadState = System.Threading.ThreadState;
 
 
@@ -37,6 +38,9 @@ public sealed class VirtualCPUExecutorThread
     {
         _running = false;
         _executorThread?.Interrupt();
+
+        lock (_cpus)
+            _cpus.Clear();
     }
 
     public void AddProcessedCPU(VirtualCPU cpu)
@@ -75,6 +79,10 @@ public sealed class VirtualCPUExecutorThread
                     Thread.Sleep((int) (TickDuration - stopwatch.ElapsedMilliseconds));
                 }
             }
+            catch (ThreadInterruptedException)
+            {
+                return;
+            }
             catch (Exception e)
             {
                 _log.Error($"Caught exception while processing step: {e.Message}\n{e.StackTrace}");
@@ -86,12 +94,7 @@ public sealed class VirtualCPUExecutorThread
 
     private void ProcessStep()
     {
-        // I don't want to deal with parallel access errors
-        // The CPU itself shouldn't cause any (unless it's of course run on multiple threads at once), but the list can
-        VirtualCPU[] cpus;
-        lock (_cpus)
-            cpus = _cpus.ToArray();
-
+        var cpus = ConcurrencyUtils.Copy(ref _cpus);
         foreach (var cpu in cpus)
         {
             if (!_running)

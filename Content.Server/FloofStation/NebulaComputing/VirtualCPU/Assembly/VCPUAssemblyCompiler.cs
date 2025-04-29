@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using YamlDotNet.Core.Tokens;
 
 
@@ -53,7 +54,7 @@ public sealed class VCPUAssemblyCompiler
 
     public bool Errored => Errors is not null && Errors.Count > 0;
 
-    public (bool success, int[]? code, int entryPoint) Compile(string input)
+    public async Task<Result> Compile(string input)
     {
         _input = input;
         _pos = 0;
@@ -66,7 +67,7 @@ public sealed class VCPUAssemblyCompiler
 
         // Read the input and parse it
         while (_pos < _input.Length) {
-            TopLevelStatement();
+            await TopLevelStatement();
 
             if (_errors.Count > 9) {
                 _errors.Add("Too many errors. Stopping compilation.");
@@ -75,7 +76,7 @@ public sealed class VCPUAssemblyCompiler
         }
 
         if (Errored)
-            return (false, null, -1);
+            return Result.Failure;
 
         // Resolve labels
         foreach (var (jumpAddr, label) in _labelledAddresses)
@@ -91,7 +92,7 @@ public sealed class VCPUAssemblyCompiler
         }
 
         if (Errored)
-            return (false, null, -1);
+            return Result.Failure;
 
         // Find the main section
         Section? startSection = null;
@@ -106,15 +107,15 @@ public sealed class VCPUAssemblyCompiler
         Errors = _errors.Count > 0 ? _errors : null;
 
         if (Errored)
-            return (false, null, -1);
+            return Result.Failure;
 
-        return (true, _output.ToArray(), startSection!.StartAddress);
+        return new(true, _output.ToArray(), startSection!.StartAddress);
     }
 
     /// <summary>
     ///     Compiler instruction or section definition.
     /// </summary>
-    private void TopLevelStatement()
+    private async Task TopLevelStatement()
     {
         var mark = _pos;
         int startSection = 0;
@@ -601,5 +602,14 @@ public sealed class VCPUAssemblyCompiler
         public string Name = name;
         public int StartAddress = startAddress;
         public Section? inSection = inSection;
+    }
+
+    public record struct Result(bool success, int[]? code, int entryPoint)
+    {
+        public bool success = success;
+        public int[]? code = code;
+        public int entryPoint = entryPoint;
+
+        public static Result Failure => new(false, null, -1);
     }
 }
