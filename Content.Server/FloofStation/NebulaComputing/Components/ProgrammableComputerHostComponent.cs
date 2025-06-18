@@ -27,7 +27,7 @@ public sealed partial class ProgrammableComputerHostComponent : Component
     public Entity<MemoryComponent>? Memory, Storage;
 
     [NonSerialized, ViewVariables]
-    public VirtualCPUECSIOProvider IOProvider;
+    public VirtualCPUECSIOProvider? IOProvider;
 
     // Shorthands
     [ViewVariables]
@@ -38,4 +38,11 @@ public sealed partial class ProgrammableComputerHostComponent : Component
 
     [ViewVariables]
     public CPUMemoryCell[]? StorageData => Storage?.Comp.RandomAccessData;
+
+    #region UI
+
+    [DataField]
+    public TimeSpan NextBUIUpdate = TimeSpan.Zero;
+
+    #endregion
 }

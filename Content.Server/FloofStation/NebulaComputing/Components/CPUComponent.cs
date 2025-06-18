@@ -12,5 +12,8 @@ public sealed partial class CPUComponent : Component
     public int InstructionRate;
 
     [NonSerialized]
+    public int EntryPoint;
+
+    [NonSerialized]
     public VirtualCPU.VirtualCPU? Executor;
 }

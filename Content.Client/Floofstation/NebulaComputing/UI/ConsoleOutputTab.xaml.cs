@@ -16,12 +16,13 @@ public sealed partial class ConsoleOutputTab : Control
 {
     [Dependency] private readonly IResourceCache _cache = default!;
 
-    public int Columns = 120;
-    public int Rows = 30;
+    public int Columns = 60;
+    public int Rows = 40;
     public CircularQueue<string> ProcessedOutput { get; private set; } = new(0);
 
     public ConsoleOutputTab()
     {
+        IoCManager.InjectDependencies(this);
         RobustXamlLoader.Load(this);
 
         var font = _cache.GetFont("/Fonts/Boxfont-round/Boxfont Round.ttf", 13);

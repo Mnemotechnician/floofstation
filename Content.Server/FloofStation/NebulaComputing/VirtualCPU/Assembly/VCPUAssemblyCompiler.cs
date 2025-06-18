@@ -54,7 +54,7 @@ public sealed class VCPUAssemblyCompiler
 
     public bool Errored => Errors is not null && Errors.Count > 0;
 
-    public async Task<Result> Compile(string input)
+    public Result Compile(string input)
     {
         _input = input;
         _pos = 0;
@@ -67,7 +67,7 @@ public sealed class VCPUAssemblyCompiler
 
         // Read the input and parse it
         while (_pos < _input.Length) {
-            await TopLevelStatement();
+            TopLevelStatement();
 
             if (_errors.Count > 9) {
                 _errors.Add("Too many errors. Stopping compilation.");
@@ -115,7 +115,7 @@ public sealed class VCPUAssemblyCompiler
     /// <summary>
     ///     Compiler instruction or section definition.
     /// </summary>
-    private async Task TopLevelStatement()
+    private void TopLevelStatement()
     {
         var mark = _pos;
         int startSection = 0;

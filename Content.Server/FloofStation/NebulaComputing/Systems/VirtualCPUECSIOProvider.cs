@@ -89,10 +89,10 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
     }
 
     // Api methods. They may be slow, but they are thread-safe. Hopefully.
-    public string GetConsoleOutput()
+    public CharCircularQueue GetConsoleOutput()
     {
         lock (_consoleOutput)
-            return _consoleOutput.AsString();
+            return _consoleOutput;
     }
 
     [Access(typeof(ProgrammableComputerHostSystem), Other = AccessPermissions.None)]
@@ -117,6 +117,16 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
             _consoleInputKeyCodes.Enqueue(keyCode);
     }
 
+    public void WriteConsoleInput(string text)
+    {
+        lock (_consoleInputKeyCodes)
+            foreach (var c in text)
+                _consoleInputKeyCodes.Enqueue(c);
+    }
+
+    /// <summary>
+    ///     Try to write into a specific port. Note: this uses "raw" port numbers, which does not include console/disk ports (everything below FirstPinPort).
+    /// </summary>
     public bool TryWritePortInput(int port, CPUMemoryCell data)
     {
         if (port < 0 || port >= ent.Comp.InputPorts)
@@ -128,10 +138,14 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
         return true;
     }
 
+    /// <summary>
+    ///     Try to get a queue for a specific port. Note: this uses "raw" port numbers, which does not include console/disk ports (everything below FirstPinPort).
+    /// </summary>
     private IntCircularQueue GetPortQueueOrDefault(Dictionary<int, IntCircularQueue> queues, int index)
     {
         if (!queues.TryGetValue(index, out var queue))
             queues[index] = queue = new(PortQueueSize);
+
         return queue;
     }
 }

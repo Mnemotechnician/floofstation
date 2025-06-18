@@ -29,4 +29,7 @@ public struct CPUMemoryCell
 
     /// <remarks>Use with caution, may lose some bits of data.</remarks>
     public static CPUMemoryCell FromChar(char x) => new() { Int32 = x };
+
+    // Mostly for debugging via VV
+    public override string ToString() => $"{Int32:x8} | c {Char} | f {Single}";
 }

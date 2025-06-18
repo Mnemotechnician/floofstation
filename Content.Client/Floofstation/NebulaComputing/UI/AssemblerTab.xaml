@@ -3,7 +3,7 @@
     xmlns:controls="clr-namespace:Content.Client.Floofstation.NebulaComputing.UI">
 
     <BoxContainer Orientation="Vertical" HorizontalExpand="True">
-        <TextEdit Name="CodeEdit" Placeholder="Enter code here" MinWidth="400" MinHeight="200"/>
+        <TextEdit Name="CodeEdit" MinWidth="400" MinHeight="200"/>
 
         <BoxContainer Orientation="Horizontal">
             <Button Name="RunButton" Text="Run"/>

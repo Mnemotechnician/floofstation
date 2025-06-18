@@ -33,7 +33,7 @@ public sealed partial class ProgrammableComputerHostSystem
         SubscribeLocalEvent<ProgrammableComputerHostComponent, DeviceNetworkPacketEvent>(OnPacketReceived);
     }
 
-    public override void Update(float frameTime)
+    public void UpdatePorts(float frameTime)
     {
         // We limit the refresh rate because device networking is insanely expensive.
         if (_timing.CurTime - _lastPortsUpdate < _portsUpdateInterval)
@@ -56,7 +56,9 @@ public sealed partial class ProgrammableComputerHostSystem
         foreach (var ent in updates)
         {
             // Read everything from their ports
-            var messages = ent.Comp.IOProvider.GetAndClearPortOutputs();
+            var messages = ent.Comp.IOProvider?.GetAndClearPortOutputs();
+            if (messages == null)
+                continue;
 
             foreach (var (port, queue) in messages)
             {
@@ -106,7 +108,7 @@ public sealed partial class ProgrammableComputerHostSystem
         else
             msg = 1; // Default is 1 for things like remote signallers and similar.
 
-        ent.Comp.IOProvider.TryWritePortInput(portNumber - 1, CPUMemoryCell.FromInt32(msg));
+        ent.Comp.IOProvider?.TryWritePortInput(portNumber - 1, CPUMemoryCell.FromInt32(msg));
     }
 
     private void SetupPorts(Entity<ProgrammableComputerHostComponent> ent)

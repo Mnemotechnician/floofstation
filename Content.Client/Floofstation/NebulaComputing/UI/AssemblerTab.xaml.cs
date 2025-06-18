@@ -11,7 +11,7 @@ namespace Content.Client.Floofstation.NebulaComputing.UI;
 [GenerateTypedNameReferences]
 public sealed partial class AssemblerTab : Control
 {
-   public event Action<string>? OnRunRequested;
+   public event Action<string, bool>? OnRunRequested;
 
    private bool _codeChangedSinceLastState = false;
 
@@ -23,6 +23,7 @@ public sealed partial class AssemblerTab : Control
         ClearOutputButton.OnPressed += _ => ClearOutput();
 
         CodeEdit.OnTextChanged += _ => _codeChangedSinceLastState = true;
+        CodeEdit.Placeholder = new Rope.Leaf("Enter code here");
     }
 
     public void Populate(ProgrammableComputerBUIState msg)
@@ -39,9 +40,11 @@ public sealed partial class AssemblerTab : Control
         if (code.Length == 0)
         {
             PrintOutput("Please enter some code before requesting a run.");
+            return;
         }
 
-        OnRunRequested?.Invoke(code);
+        OnRunRequested?.Invoke(code, true);
+        PrintOutput("Compilation has started. Check the console for more info.");
         _codeChangedSinceLastState = false;
     }
 
@@ -52,7 +55,7 @@ public sealed partial class AssemblerTab : Control
 
     public void PrintOutput(string output)
     {
-        Output.Text += output + "\n";
+        Output.Text = output;
     }
 }
 

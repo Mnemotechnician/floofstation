@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
 using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Assembly;
 using NUnit.Framework;

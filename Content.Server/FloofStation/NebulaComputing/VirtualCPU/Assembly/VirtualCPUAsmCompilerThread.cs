@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Util;
+using Serilog;
 using ThreadState = System.Threading.ThreadState;
 
 
@@ -10,6 +12,8 @@ namespace Content.Server.FloofStation.NebulaComputing.VirtualCPU.Assembly;
 // TODO: code duplication? perhaps extract a base class
 public sealed class VirtualCPUAsmCompilerThread
 {
+    public const int MaxTimeToCompile = 1000;
+
     public bool Running => _running && _executorThread?.ThreadState.HasFlag(ThreadState.Running) == true;
     private bool _running;
 
@@ -49,29 +53,58 @@ public sealed class VirtualCPUAsmCompilerThread
     {
         var finishedJobs = ConcurrencyUtils.CopyAndClear(ref _finishedJobs);
         foreach (var job in finishedJobs)
-            if (job.Result is {} result)
-                job.Callback(result);
+            job.Callback(job);
     }
 
     /// <summary>
     ///     Enqueues a compiler job. The callback will be invoked on the game thread.
     /// </summary>
-    public void EnqueueJob(EntityUid target, string source, Action<VCPUAssemblyCompiler.Result> callback)
+    public void EnqueueJob(EntityUid ent, string source, Action<AssemblerJob> callback)
     {
         lock (_jobs)
-            _jobs.Add(new(target, source, callback));
+        {
+            // Cancel all pending jobs on this entity
+            _jobs.RemoveAll(it => it.Entity == ent);
+            _jobs.Add(new(ent, source, callback));
+        }
     }
 
     private void DoWorkSync()
     {
-        while (_running) {
+        while (_running)
+        {
+            if (!_running)
+                return;
+
+            ProcessStep();
+            Thread.Sleep(50); // Arbitrary value to ensure we don't clog up the CPU
+        }
+    }
+
+    private void ProcessStep()
+    {
+        var jobs = ConcurrencyUtils.CopyAndClear(ref _jobs);
+        foreach (var job in jobs)
+        {
             if (!_running)
                 return;
 
             try
             {
-                ProcessStep();
-                Thread.Sleep(50); // Arbitrary value to ensure we don't clog up the CPU
+                // This is... kinda bad? We do this to limit the maximum amount of time a single compilation can take.
+                // It does lead to us spawning new virtual threads though. Wonder if there's a better way.
+                var task = Task.Run(() => job.Compiler.Compile(job.Source));
+                if (!task.IsCompleted)
+                    task.Wait(MaxTimeToCompile);
+
+                #pragma warning disable RA0004
+                job.Result = task.IsCompletedSuccessfully
+                    ? task.Result
+                    : VCPUAssemblyCompiler.Result.Failure;
+                #pragma warning restore RA0004
+
+                lock (_finishedJobs)
+                    _finishedJobs.Add(job);
             }
             catch (ThreadInterruptedException)
             {
@@ -79,33 +112,24 @@ public sealed class VirtualCPUAsmCompilerThread
             }
             catch (Exception e)
             {
-                _log.Error($"Caught exception while processing step: {e.Message}\n{e.StackTrace}");
+                _log.Error($"Caught exception while processing step for {job.Entity}: {e.Message}\n{e.StackTrace}");
                 // Long sleep to avoid spamming the logs too much in case of repeated errors
                 Thread.Sleep(5000);
             }
         }
     }
 
-    private void ProcessStep()
-    {
-        var jobs = ConcurrencyUtils.Copy(ref _jobs);
-        foreach (var job in jobs)
-        {
-            if (!_running)
-                return;
-        }
-    }
 
-
-    private class AssemblerJob(
+    public sealed class AssemblerJob(
         EntityUid ent,
         string source,
-        Action<VCPUAssemblyCompiler.Result> callback)
+        Action<AssemblerJob> callback)
     {
         public EntityUid Entity => ent;
-        internal string Source => source;
-        internal Action<VCPUAssemblyCompiler.Result> Callback => callback;
+        public string Source => source;
+        public VCPUAssemblyCompiler Compiler = new();
+        internal Action<AssemblerJob> Callback => callback;
 
-        internal VCPUAssemblyCompiler.Result? Result;
+        public VCPUAssemblyCompiler.Result? Result;
     }
 }

@@ -6,30 +6,32 @@
     MinHeight="300"
     MinWidth="400">
 
-    <PanelContainer>
-        <PanelContainer.PanelOverride>
-            <graphics:StyleBoxFlat BackgroundColor="#202023"/>
-        </PanelContainer.PanelOverride>
+    <BoxContainer Orientation="Vertical" HorizontalExpand="True">
+        <PanelContainer>
+            <PanelContainer.PanelOverride>
+                <graphics:StyleBoxFlat BackgroundColor="#202023"/>
+            </PanelContainer.PanelOverride>
 
-        <BoxContainer Orientation="Horizontal">
-            <Label HorizontalExpand="True" Text="{Loc 'programmable-computer-trademark'}" Margin="5"/>
+            <BoxContainer Orientation="Horizontal">
+                <Label HorizontalExpand="True" Text="{Loc 'programmable-computer-trademark'}" Margin="5"/>
 
-            <Label Name="StatusLabel"/>
-            <Button Name="StopButton" Text="{Loc 'programmable-computer-button-reset'}"/>
-            <Button Name="RestartButton" Text="{Loc 'programmable-computer-button-restart'}"/>
-            <Button Name="RunButton" Text="{Loc 'programmable-computer-button-restart'}"/>
-        </BoxContainer>
-    </PanelContainer>
+                <Label Name="StatusLabel"/>
+                <Button Name="StopButton" Text="{Loc 'programmable-computer-button-reset'}"/>
+                <Button Name="RestartButton" Text="{Loc 'programmable-computer-button-restart'}"/>
+                <Button Name="RunButton" Text="{Loc 'programmable-computer-button-restart'}"/>
+            </BoxContainer>
+        </PanelContainer>
 
-    <PanelContainer>
-        <PanelContainer.PanelOverride>
-            <graphics:StyleBoxFlat BackgroundColor="#202023"/>
-        </PanelContainer.PanelOverride>
+        <PanelContainer>
+            <PanelContainer.PanelOverride>
+                <graphics:StyleBoxFlat BackgroundColor="#202023"/>
+            </PanelContainer.PanelOverride>
 
-        <TabContainer Name="TabSelector">
-            <ui:ConsoleOutputTab Name="Console"/>
-            <ui:AssemblerTab Name="Assembler"/>
-            <ui:InfoTab Name="Info"/>
-        </TabContainer>
-    </PanelContainer>
+            <TabContainer Name="TabSelector">
+                <ui:ConsoleOutputTab Name="Console" Access="Public"/>
+                <ui:AssemblerTab Name="Assembler" Access="Public"/>
+                <ui:InfoTab Name="Info" Access="Public"/>
+            </TabContainer>
+        </PanelContainer>
+    </BoxContainer>
 </controls:FancyWindow>

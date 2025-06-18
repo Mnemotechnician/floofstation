@@ -36,6 +36,14 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         InitializeUI();
     }
 
+    public override void Update(float frameTime)
+    {
+        _asmCompilerThread.Update();
+
+        UpdatePorts(frameTime);
+        UpdateUI(frameTime);
+    }
+
     private void OnGameStart(PostGameMapLoad ev)
     {
         if (_executorThread.Running || _asmCompilerThread.Running)
@@ -212,5 +220,54 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         }
 
         return _ui.TryOpenUi(computer.Owner, ProgrammableComputerUiKey.Key, user, false);
+    }
+
+    public void CompileAndSetAssembly(Entity<ProgrammableComputerHostComponent> ent, string code, bool toRun) =>
+        _asmCompilerThread.EnqueueJob(ent, code, job =>
+        {
+            // This should be resumed on the game thread, so this is fine
+            if (job.Result is not { } result || ent.Comp.MemoryData is null)
+            {
+                WriteLog(ent, "[E] Compilation failed (unknown error)");
+                return;
+            }
+
+            if (!result.success || result.code is null)
+            {
+                WriteLog(ent, $"[E] Compilation failed:");
+                foreach (var error in job.Compiler.Errors ?? [])
+                    WriteLog(ent, $"[E] {error}");
+                return;
+            }
+
+            if (result.code.Length > ent.Comp.MemoryData.Length)
+                WriteLog(ent, "[W] Program completed successfully, but the result is too long to fit in the memory! Result will be truncated; code integrity is not guaranteed.");
+
+            MemCopy(ent.Comp.MemoryData, 0, result.code, 0);
+
+            if (ent.Comp.CPU?.Comp1 is {} cpu)
+            {
+                cpu.Executor?.Reset(result.entryPoint);
+                cpu.EntryPoint = result.entryPoint;
+
+                if (toRun && cpu.Executor is {} executor)
+                    _executorThread.AddProcessedCPU(executor);
+            }
+        });
+
+    private void MemCopy(Array dst, int dstOffset, Array src, int srcOffset)
+    {
+        var num = Math.Min(dst.Length - dstOffset, src.Length - srcOffset);
+        // Not-so-slow memcpy when? I'm pretty sure this just calls SlowCopy under the hood due to the array type mismatch
+        // Even though both arrays have the same 4 byte size
+        Array.Copy(src, srcOffset, dst, dstOffset, num);
+    }
+
+    public void WriteLog(Entity<ProgrammableComputerHostComponent> ent, string data)
+    {
+        if (ent.Comp.IOProvider is not { } provider)
+            return;
+
+        provider.WriteConsoleInput(data);
     }
 }

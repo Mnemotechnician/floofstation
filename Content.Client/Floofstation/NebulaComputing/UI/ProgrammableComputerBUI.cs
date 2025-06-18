@@ -1,5 +1,6 @@
 using Content.Shared.FloofStation.NebulaComputing.UI.Events;
 using Robust.Client.UserInterface;
+using Serilog;
 
 
 namespace Content.Client.Floofstation.NebulaComputing.UI;
@@ -17,6 +18,7 @@ public sealed class ProgrammableComputerBUI : BoundUserInterface
         {
             Window = this.CreateWindow<ProgrammableComputerWindow>();
             Window.OnAction += OnAction;
+            Window.Assembler.OnRunRequested += OnAssemblerRun;
         }
 
         Window.Open();
@@ -24,5 +26,5 @@ public sealed class ProgrammableComputerBUI : BoundUserInterface
 
     private void OnAction(PCActionRequest.Action action) => SendMessage(new PCActionRequest { Act = action });
 
-    private void OnAssemblerRun(string code) => SendMessage(new AssemblerRunRequest { Code = code });
+    private void OnAssemblerRun(string code, bool toRun) => SendMessage(new AssemblerRunRequest { Code = code, Run = toRun });
 }

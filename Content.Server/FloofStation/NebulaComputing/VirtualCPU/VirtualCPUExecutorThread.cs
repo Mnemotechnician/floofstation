@@ -46,13 +46,21 @@ public sealed class VirtualCPUExecutorThread
     public void AddProcessedCPU(VirtualCPU cpu)
     {
         lock (_cpus)
-            _cpus.Add(cpu);
+            if (!_cpus.Contains(cpu))
+                _cpus.Add(cpu);
     }
 
     public void RemoveProcessedCPU(VirtualCPU cpu)
     {
         lock (_cpus)
             _cpus.Remove(cpu);
+    }
+
+    // TODO this is terrible. Use a RW lock?
+    public bool IsRunning(VirtualCPU cpu)
+    {
+        lock (_cpus)
+            return _cpus.Contains(cpu);
     }
 
     private void DoWorkSync()
@@ -103,6 +111,7 @@ public sealed class VirtualCPUExecutorThread
             if (cpu.Halted)
                 continue;
 
+            // TODO if Reset() is called in the middle, we may get fucked
             cpu.ProcessTicks(cpu.InstructionRate);
         }
     }
