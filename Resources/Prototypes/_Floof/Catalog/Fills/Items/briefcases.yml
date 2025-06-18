@@ -1,0 +1,20 @@
+- type: entity
+  id: BriefcaseSyndieTypewriterBundleFilled
+  parent: BriefcaseSyndie
+  suffix: Syndicate, Typewriter Bundle
+  components:
+  - type: Item
+    size: Ginormous
+  - type: Storage
+    maxItemSize: Huge
+    grid:
+    - 0,0,6,3
+  - type: StorageFill
+    contents:
+      - id: WeaponSubMachineGunTypewriter
+      - id: MagazinePistolSubMachineGun
+        amount: 2 #Removed one, also fixed the Fill to be like the others.
+      - id: CigarGoldCase
+      - id: ClothingUniformJumpsuitDetectiveGrey
+      - id: ClothingHeadHatFedoraChoc
+      - id: FlippoEngravedLighter

@@ -4,6 +4,7 @@
   roundStart: true # I'll kill these issues somehow.
   prototype: MobArachne
   sprites: MobArachneSprites
+  defaultSkinTone: "#c0967f"
   markingLimits: MobArachneMarkingLimits
   dollPrototype: MobArachneDummy
   skinColoration: Hues
@@ -17,7 +18,7 @@
   id: MobArachneMarkingLimits
   points:
     Undershirt:
-      points: 1
+      points: 2 # FLOOF CHANGE
       required: false # Floof, add underwear
     Hair:
       points: 1
@@ -32,35 +33,38 @@
       points: 1
       required: false
     Chest:
-      points: 1
+      points: 6
       required: false
     RightArm:
-      points: 2
+      points: 6
       required: false
     RightHand:
-      points: 3
+      points: 6
       required: false
     LeftArm:
-      points: 2
+      points: 6
       required: false
     LeftHand:
-      points: 3
+      points: 6
       required: false
     Head:
-      points: 2
+      points: 6
       required: false
     HeadTop:
-      points: 2
+      points: 6
       required: false
     HeadSide:
-      points: 1
+      points: 6
       required: false
 
 
 - type: speciesBaseSprites
   id: MobArachneSprites
   sprites:
+    TailBehind: MobHumanoidAnyMarking
+    TailOversuit: MobHumanoidAnyMarking
     Head: MobHumanHead
+    Face: MobHumanoidAnyMarking
     HeadSide: MobHumanoidAnyMarking
     Hair: MobHumanoidAnyMarking
     FacialHair: MobHumanoidAnyMarking

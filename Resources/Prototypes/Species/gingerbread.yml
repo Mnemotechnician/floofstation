@@ -12,9 +12,13 @@
 - type: speciesBaseSprites
   id: MobGingerbreadSprites
   sprites:
+    TailBehind: MobHumanoidAnyMarking
+    TailOversuit: MobHumanoidAnyMarking
     Head: MobGingerbreadHead
     HeadTop: MobHumanoidAnyMarking
     HeadSide: MobHumanoidAnyMarking
+    Underwear: MobHumanoidAnyMarking
+    Undershirt: MobHumanoidAnyMarking
     Chest: MobGingerbreadTorso
     Eyes: MobGingerbreadEyes
     LArm: MobGingerbreadLArm
