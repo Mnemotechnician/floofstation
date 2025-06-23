@@ -1,0 +1,74 @@
+- type: entity
+  id: ComputerProgrammableBase
+  parent: BaseStructure
+  name: programmable computer
+  description: A peak of technology.
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _Floof/Objects/Structures/NebulaComputing/computer.rsi
+    layers:
+    - state: base
+    - state: working
+      shader: unshaded
+    - state: printing
+      shader: unshaded
+  - type: ItemSlots # TODO: move the components to shared so the whitelist can pass client-side
+    slots:
+      cpu:
+        name: computer-slot-name-cpu
+        startingItem: ComputerCPUBasic
+        swap: false
+        whitelist:
+          components: [CPU]
+      memory:
+        name: computer-slot-name-memory
+        startingItem: ComputerMemoryBasic
+        swap: false
+        whitelist:
+          components: [Memory]
+      storage:
+        name: computer-slot-name-storage
+        startingItem: ComputerHardDiskBasic
+        swap: false
+        whitelist:
+          components: [Memory]
+  - type: ContainerContainer
+    containers:
+      cpu: !type:ContainerSlot
+      memory: !type:ContainerSlot
+      storage: !type:ContainerSlot
+  - type: UserInterface
+    interfaces:
+      enum.ProgrammableComputerUiKey.Key:
+        type: ProgrammableComputerBUI
+  - type: ProgrammableComputerHost
+  # Device links
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: WirelessNetworkConnection
+    range: 25
+  - type: DeviceLinkSource
+    ports:
+    - CustomPort1
+    - CustomPort2
+    - CustomPort3
+    - CustomPort4
+  - type: DeviceLinkSink
+    ports:
+    - CustomPort1
+    - CustomPort2
+    - CustomPort3
+    - CustomPort4
+
+
+
+- type: entity
+  id: ComputerProgrammable
+  parent: [ ComputerProgrammableBase ]
+  name: programmable computer
+  description: A peak of technology.
+
+
+
