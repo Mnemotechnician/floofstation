@@ -95,6 +95,24 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
             return _consoleOutput;
     }
 
+    /// <summary>
+    ///     Write a key code into the console output queue of the computer, showing it on the terminal.
+    /// </summary>
+    public void WriteConsoleOutput(char c)
+    {
+        lock (_consoleOutput)
+            _consoleOutput.Enqueue(c);
+    }
+
+    /// <summary>
+    ///     Write a string into the console output queue of the computer, showing it on the terminal.
+    /// </summary>
+    public void WriteConsoleOutput(string str)
+    {
+        lock (_consoleOutput)
+            _consoleOutput.Append(str);
+    }
+
     [Access(typeof(ProgrammableComputerHostSystem), Other = AccessPermissions.None)]
     public Dictionary<int, int[]> GetAndClearPortOutputs()
     {
@@ -111,12 +129,19 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
         }
     }
 
+    /// <summary>
+    ///     Write a key code to the input queue for the computer to read.
+    /// </summary>
     public void WriteConsoleInput(int keyCode)
     {
         lock (_consoleInputKeyCodes)
             _consoleInputKeyCodes.Enqueue(keyCode);
     }
 
+
+    /// <summary>
+    ///     Write a string to the input queue for the computer to read.
+    /// </summary>
     public void WriteConsoleInput(string text)
     {
         lock (_consoleInputKeyCodes)

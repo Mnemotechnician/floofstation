@@ -29,6 +29,7 @@ public sealed class VirtualCPUAsmCompilerThread
 
         _executorThread = new Thread(DoWorkSync)
         {
+            Name = "VCPU Asm Compiler",
             IsBackground = true,
             Priority = ThreadPriority.BelowNormal
         };
@@ -71,23 +72,23 @@ public sealed class VirtualCPUAsmCompilerThread
 
     private void DoWorkSync()
     {
-        while (_running)
+        try
         {
-            if (!_running)
-                return;
-
-            ProcessStep();
-            Thread.Sleep(50); // Arbitrary value to ensure we don't clog up the CPU
+            while (_running && ProcessStep()) { }
+        }
+        catch (ThreadInterruptedException e)
+        {
+            return; // Finish gracefully
         }
     }
 
-    private void ProcessStep()
+    private bool ProcessStep()
     {
         var jobs = ConcurrencyUtils.CopyAndClear(ref _jobs);
         foreach (var job in jobs)
         {
             if (!_running)
-                return;
+                return false;
 
             try
             {
@@ -105,11 +106,10 @@ public sealed class VirtualCPUAsmCompilerThread
 
                 lock (_finishedJobs)
                     _finishedJobs.Add(job);
+
+                Thread.Sleep(50); // Arbitrary value to ensure we don't clog up the CPU and check for interrupts
             }
-            catch (ThreadInterruptedException)
-            {
-                return;
-            }
+            catch (ThreadInterruptedException) { throw; }
             catch (Exception e)
             {
                 _log.Error($"Caught exception while processing step for {job.Entity}: {e.Message}\n{e.StackTrace}");
@@ -117,6 +117,8 @@ public sealed class VirtualCPUAsmCompilerThread
                 Thread.Sleep(5000);
             }
         }
+
+        return true;
     }
 
 

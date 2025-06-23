@@ -1,3 +1,4 @@
+using Content.Shared._Floof.NebulaComputing.UI;
 using Content.Shared._Floof.NebulaComputing.UI.Events;
 using Robust.Client.UserInterface;
 using Serilog;
@@ -22,6 +23,15 @@ public sealed class ProgrammableComputerBUI : BoundUserInterface
         }
 
         Window.Open();
+    }
+
+    protected override void UpdateState(BoundUserInterfaceState state)
+    {
+        if (state is not ProgrammableComputerBUIState pcState || Window is null)
+            return;
+
+        Window.Console.Populate(pcState);
+        Window.Assembler.Populate(pcState);
     }
 
     private void OnAction(PCActionRequest.Action action) => SendMessage(new PCActionRequest { Act = action });

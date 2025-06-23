@@ -26,6 +26,7 @@ public sealed class VirtualCPUExecutorThread
 
         _executorThread = new Thread(DoWorkSync)
         {
+            Name = "VCPU Executor",
             IsBackground = true,
             Priority = ThreadPriority.BelowNormal
         };

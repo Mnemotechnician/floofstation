@@ -16,7 +16,7 @@ public sealed partial class ConsoleOutputTab : Control
 {
     [Dependency] private readonly IResourceCache _cache = default!;
 
-    public int Columns = 60;
+    public int Columns = 80;
     public int Rows = 40;
     public CircularQueue<string> ProcessedOutput { get; private set; } = new(0);
 
@@ -25,7 +25,7 @@ public sealed partial class ConsoleOutputTab : Control
         IoCManager.InjectDependencies(this);
         RobustXamlLoader.Load(this);
 
-        var font = _cache.GetFont("/Fonts/Boxfont-round/Boxfont Round.ttf", 13);
+        var font = _cache.GetFont("/EngineFonts/NotoSans/NotoSansMono-Regular.ttf", 10);
         Output.FontOverride = font;
 
         var lh = font.GetLineHeight(1) + 0.1f;

@@ -250,6 +250,8 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
                 cpu.Executor?.Reset(result.entryPoint);
                 cpu.EntryPoint = result.entryPoint;
 
+                WriteLog(ent, "Compilation successful!");
+
                 if (toRun && cpu.Executor is {} executor)
                     _executorThread.AddProcessedCPU(executor);
             }
@@ -263,11 +265,14 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         Array.Copy(src, srcOffset, dst, dstOffset, num);
     }
 
-    public void WriteLog(Entity<ProgrammableComputerHostComponent> ent, string data)
+    public void WriteLog(Entity<ProgrammableComputerHostComponent> ent, string data, bool trailingNewline = true)
     {
         if (ent.Comp.IOProvider is not { } provider)
             return;
 
-        provider.WriteConsoleInput(data);
+        if (trailingNewline)
+            data += '\n';
+
+        provider.WriteConsoleOutput(data);
     }
 }
