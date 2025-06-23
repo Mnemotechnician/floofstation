@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Content.Shared.FloofStation.NebulaComputing.Util;
+using Content.Shared._Floof.NebulaComputing.Util;
 using NUnit.Framework;
 
 
-namespace Content.Tests.Server.Floof.NebulaComputing;
+namespace Content.Tests.Server._Floof.NebulaComputing;
 
 
 [TestFixture]

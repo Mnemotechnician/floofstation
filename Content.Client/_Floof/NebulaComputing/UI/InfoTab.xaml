@@ -1,6 +1,6 @@
 <controls:InfoTab
     xmlns="https://spacestation14.io"
-    xmlns:controls="clr-namespace:Content.Client.Floofstation.NebulaComputing.UI">
+    xmlns:controls="clr-namespace:Content.Client._Floof.NebulaComputing.UI">
 
     <ScrollContainer HorizontalExpand="True" VerticalExpand="True" HScrollEnabled="False">
         <BoxContainer Orientation="Vertical" HorizontalExpand="True">

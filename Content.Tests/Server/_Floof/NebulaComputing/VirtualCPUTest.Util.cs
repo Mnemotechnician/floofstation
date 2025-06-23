@@ -1,11 +1,10 @@
 using System;
-using System.Threading.Tasks;
-using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
-using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Assembly;
+using Content.Server._Floof.NebulaComputing.VirtualCPU;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Assembly;
 using NUnit.Framework;
 
 
-namespace Content.Tests.Server.Floof.NebulaComputing;
+namespace Content.Tests.Server._Floof.NebulaComputing;
 
 
 public sealed partial class VirtualCPUTest

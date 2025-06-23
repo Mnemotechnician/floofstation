@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Content.Server.FloofStation.NebulaComputing.VirtualCPU;
-using Content.Server.FloofStation.NebulaComputing.VirtualCPU.Assembly;
-using JetBrains.Annotations;
+﻿using Content.Server._Floof.NebulaComputing.VirtualCPU;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Assembly;
 using NUnit.Framework;
 
-namespace Content.Tests.Server.Floof.NebulaComputing ;
+namespace Content.Tests.Server._Floof.NebulaComputing;
 
 using IS = InstructionSet;
 
