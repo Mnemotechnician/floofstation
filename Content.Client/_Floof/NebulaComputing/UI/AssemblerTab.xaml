@@ -9,7 +9,16 @@
                 <graphics:StyleBoxFlat BackgroundColor="#202023" />
             </PanelContainer.PanelOverride>
 
-            <TextEdit Name="CodeEdit" MinWidth="400" MinHeight="200"/>
+            <Control>
+                <TextEdit Name="CodeEdit" MinWidth="400" MinHeight="200"/>
+
+                <Label
+                    Name="CursorStats"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    HorizontalExpand="True"
+                    Margin="2"/>
+            </Control>
         </PanelContainer>
 
         <BoxContainer Orientation="Horizontal">
@@ -22,7 +31,7 @@
                 <graphics:StyleBoxFlat BackgroundColor="#202023" />
             </PanelContainer.PanelOverride>
 
-            <Label Name="Output" HorizontalExpand="True" MinHeight="100"/>
+            <Label Name="Output" HorizontalExpand="True" MinHeight="50"/>
         </PanelContainer>
     </BoxContainer>
 </controls:AssemblerTab>
