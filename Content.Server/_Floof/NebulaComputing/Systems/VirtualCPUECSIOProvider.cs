@@ -16,10 +16,14 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
     /// <remarks>This is very unrealistic, but it's a necessary sacrifice because CPUs aren't updated on each game tick.</remarks>
     public const int PortQueueSize = 16;
 
+    [ViewVariables]
     private CharCircularQueue _consoleOutput = new(ProgrammableComputerBUIState.MaxOutputChars);
+    [ViewVariables]
     private IntCircularQueue _consoleInputKeyCodes = new(ProgrammableComputerBUIState.MaxInputKeyCodes);
 
+    [ViewVariables]
     private Dictionary<int, IntCircularQueue> _inputPortQueues = new();
+    [ViewVariables]
     private Dictionary<int, IntCircularQueue> _outputPortQueues = new();
 
     // The below methods may be called from different threads. I should be concerned about thread safety.

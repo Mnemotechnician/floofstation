@@ -72,6 +72,8 @@ public sealed partial class ConsoleOutputTab : Control
             if (sb.Length >= Columns)
                 NewLine();
         }
+        if (sb.Length > 0)
+            NewLine();
 
         ProcessedOutput = rows;
         Output.Text = string.Join('\n', rows);

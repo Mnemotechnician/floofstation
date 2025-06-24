@@ -578,7 +578,7 @@ public sealed class VCPUAssemblyCompiler
 
     private void Write(int value) => _output.Add(value);
 
-    private void Error(string message, int addr = -1)
+    public void Error(string message, int addr = -1)
     {
         if (addr == -1)
             addr = _pos;

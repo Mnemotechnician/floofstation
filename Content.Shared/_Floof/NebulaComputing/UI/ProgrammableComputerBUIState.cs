@@ -14,7 +14,7 @@ public sealed class ProgrammableComputerBUIState : BoundUserInterfaceState
     public CircularQueue<char> ConsoleOutput;
 
     // Assembler state
-    public string? LastRunAssembly;
+    public string? AssemblerCode;
     public bool IsActivelyAssembling;
 
     public ProgrammableComputerBUIState(bool isRunning, CircularQueue<char> consoleOutput)

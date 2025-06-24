@@ -96,7 +96,7 @@ public sealed partial class AssemblerTab : Control
     {
         RunButton.Disabled = msg.IsActivelyAssembling;
 
-        if (msg.LastRunAssembly is { } assembly && !_codeChangedSinceLastState)
+        if (msg.AssemblerCode is { } assembly && !_codeChangedSinceLastState)
             CodeEdit.TextRope = new Rope.Leaf(assembly);
     }
 

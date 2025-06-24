@@ -3,7 +3,7 @@ namespace Content.Server._Floof.NebulaComputing.Components;
 
 // ReSharper disable once InconsistentNaming
 /// <summary>
-///     The memory bank of a programmable computer.
+///     The CPU of a programmable computer.
 /// </summary>
 [RegisterComponent]
 public sealed partial class CPUComponent : Component

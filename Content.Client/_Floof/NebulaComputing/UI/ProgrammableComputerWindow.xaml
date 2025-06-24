@@ -18,7 +18,7 @@
                 <Label Name="StatusLabel"/>
                 <Button Name="StopButton" Text="{Loc 'programmable-computer-button-reset'}"/>
                 <Button Name="RestartButton" Text="{Loc 'programmable-computer-button-restart'}"/>
-                <Button Name="RunButton" Text="{Loc 'programmable-computer-button-restart'}"/>
+                <Button Name="RunButton" Text="{Loc 'programmable-computer-button-run'}"/>
             </BoxContainer>
         </PanelContainer>
 

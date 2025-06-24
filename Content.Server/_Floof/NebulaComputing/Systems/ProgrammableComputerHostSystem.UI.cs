@@ -1,10 +1,6 @@
 using Content.Server._Floof.NebulaComputing.Components;
-using Content.Server._Floof.NebulaComputing.VirtualCPU;
-using Content.Server.Spawners.Components;
 using Content.Shared._Floof.NebulaComputing.UI;
 using Content.Shared._Floof.NebulaComputing.UI.Events;
-using Content.Shared.Popups;
-using Robust.Shared.Timing;
 
 
 namespace Content.Server._Floof.NebulaComputing.Systems;
@@ -39,7 +35,12 @@ public sealed partial class ProgrammableComputerHostSystem
 
             var executor = host.CPU?.Comp1?.Executor;
             var isRunning = executor?.Halted != false || !_executorThread.IsRunning(executor);
-            var state = new ProgrammableComputerBUIState(isRunning, host.IOProvider?.GetConsoleOutput() ?? new(0));
+            var state = new ProgrammableComputerBUIState(
+                isRunning,
+                host.IOProvider?.GetConsoleOutput() ?? new(0));
+
+            state.AssemblerCode = host.AssemblerCode;
+            state.IsActivelyAssembling = host.IsActivelyAssembling;
 
             _ui.SetUiState((ent, ui), ProgrammableComputerUiKey.Key, state);
         }
@@ -64,9 +65,12 @@ public sealed partial class ProgrammableComputerHostSystem
                 _executorThread.AddProcessedCPU(executor);
                 break;
 
+            // Reset also stops any ongoing assemblies
             case PCActionRequest.Action.Reset:
                 _executorThread.RemoveProcessedCPU(executor);
+                _asmCompilerThread.StopAllJobs(ent);
                 executor.Reset(cpu.EntryPoint);
+
                 break;
         }
     }

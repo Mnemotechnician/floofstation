@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server._Floof.NebulaComputing.VirtualCPU.Util;
@@ -68,6 +69,28 @@ public sealed class VirtualCPUAsmCompilerThread
             _jobs.RemoveAll(it => it.Entity == ent);
             _jobs.Add(new(ent, source, callback));
         }
+    }
+
+    /// <summary>
+    ///     Stops all jobs for the given entity.
+    /// </summary>
+    public void StopAllJobs(EntityUid ent)
+    {
+        AssemblerJob[] jobs;
+        lock (_jobs)
+        {
+            jobs = _jobs.Where(it => it.Entity == ent).ToArray();
+            _jobs.RemoveAll(it => it.Entity == ent);
+        }
+
+        foreach (var job in jobs)
+        {
+            job.Result = null;
+            job.Compiler.Error("Compilation has been aborted.");
+        }
+
+        lock (_finishedJobs)
+            _finishedJobs.AddRange(jobs);
     }
 
     private void DoWorkSync()

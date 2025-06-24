@@ -13,6 +13,7 @@
       shader: unshaded
     - state: printing
       shader: unshaded
+  - type: InteractionOutline
   - type: ItemSlots # TODO: move the components to shared so the whitelist can pass client-side
     slots:
       cpu:

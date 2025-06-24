@@ -45,4 +45,14 @@ public sealed partial class ProgrammableComputerHostComponent : Component
     public TimeSpan NextBUIUpdate = TimeSpan.Zero;
 
     #endregion
+
+    #region Assembler
+
+    [DataField]
+    public string? AssemblerCode;
+
+    [NonSerialized]
+    public bool IsActivelyAssembling = false;
+
+    #endregion
 }

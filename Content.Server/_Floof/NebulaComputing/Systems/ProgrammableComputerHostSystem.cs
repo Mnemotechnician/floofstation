@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Content.Server._Floof.NebulaComputing.Components;
 using Content.Server._Floof.NebulaComputing.VirtualCPU;
 using Content.Server._Floof.NebulaComputing.VirtualCPU.Assembly;
@@ -11,6 +12,7 @@ using Content.Shared.Storage;
 using Content.Shared.Verbs;
 using Robust.Shared.Containers;
 using Robust.Shared.CPUJob.JobQueues.Queues;
+using Robust.Shared.Utility;
 
 
 namespace Content.Server._Floof.NebulaComputing.Systems;
@@ -18,9 +20,9 @@ namespace Content.Server._Floof.NebulaComputing.Systems;
 
 public sealed partial class ProgrammableComputerHostSystem : EntitySystem
 {
-    [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
+    [Robust.Shared.IoC.Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
+    [Robust.Shared.IoC.Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Robust.Shared.IoC.Dependency] private readonly SharedContainerSystem _container = default!;
 
     private readonly VirtualCPUExecutorThread _executorThread = new();
     private readonly VirtualCPUAsmCompilerThread _asmCompilerThread = new();
@@ -29,6 +31,9 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
     {
         SubscribeLocalEvent<PostGameMapLoad>(OnGameStart);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnGameRestart);
+
+        SubscribeLocalEvent<CPUComponent, ComponentShutdown>(OnCPUShuttingDown);
+        SubscribeLocalEvent<CPUComponent, EntGotRemovedFromContainerMessage>(OnCPURemoved);
         SubscribeLocalEvent<ProgrammableComputerHostComponent, AfterInteractEvent>(OnComputerClicked);
         SubscribeLocalEvent<ProgrammableComputerHostComponent, GetVerbsEvent<InteractionVerb>>(OnGetComputerVerbs);
 
@@ -63,9 +68,22 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         _asmCompilerThread.Stop();
     }
 
+    private void OnCPUShuttingDown(Entity<CPUComponent> ent, ref ComponentShutdown args)
+    {
+        // This should ideally never happen
+        if (ent.Comp.Executor is { } executor)
+            _executorThread.RemoveProcessedCPU(executor);
+    }
+
+    private void OnCPURemoved(Entity<CPUComponent> ent, ref EntGotRemovedFromContainerMessage args)
+    {
+        if (ent.Comp.Executor is { } executor)
+            _executorThread.RemoveProcessedCPU(executor);
+    }
+
     private void OnComputerClicked(Entity<ProgrammableComputerHostComponent> ent, ref AfterInteractEvent args)
     {
-        if (args.Handled || !args.CanReach)
+        if (!args.CanReach)
             return;
 
         TryOpenUI(args.User, ent);
@@ -222,9 +240,20 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         return _ui.TryOpenUi(computer.Owner, ProgrammableComputerUiKey.Key, user, false);
     }
 
-    public void CompileAndSetAssembly(Entity<ProgrammableComputerHostComponent> ent, string code, bool toRun) =>
+    public void CompileAndSetAssembly(Entity<ProgrammableComputerHostComponent> ent, string code, bool toRun, bool saveCode = true)
+    {
+        WriteLog(ent, $"[I] Compiling... {code.Length} bytes. {(toRun ? "Will run the code afterwards." : "")}");
+
+        if (saveCode)
+            ent.Comp.AssemblerCode = code;
+
+        ent.Comp.IsActivelyAssembling = true;
         _asmCompilerThread.EnqueueJob(ent, code, job =>
         {
+            ent.Comp.IsActivelyAssembling = false;
+            if (!TerminatingOrDeleted(ent))
+                return;
+
             // This should be resumed on the game thread, so this is fine
             if (job.Result is not { } result || ent.Comp.MemoryData is null)
             {
@@ -256,13 +285,15 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
                     _executorThread.AddProcessedCPU(executor);
             }
         });
+    }
 
-    private void MemCopy(Array dst, int dstOffset, Array src, int srcOffset)
+    private void MemCopy(CPUMemoryCell[] dst, int dstOffset, int[] src, int srcOffset)
     {
         var num = Math.Min(dst.Length - dstOffset, src.Length - srcOffset);
-        // Not-so-slow memcpy when? I'm pretty sure this just calls SlowCopy under the hood due to the array type mismatch
-        // Even though both arrays have the same 4 byte size
-        Array.Copy(src, srcOffset, dst, dstOffset, num);
+        // Fast memcopy when? C# doesn't allow it due to array type mismatch
+        // Would need to do a reinterpret cast or something similarly unsafe, or change the compiler to use CPUMemoryCell
+        for (var i = 0; i < num; ++i)
+            dst[dstOffset + i].Int32 = src[srcOffset + i];
     }
 
     public void WriteLog(Entity<ProgrammableComputerHostComponent> ent, string data, bool trailingNewline = true)

@@ -30,6 +30,7 @@ public sealed class ProgrammableComputerBUI : BoundUserInterface
         if (state is not ProgrammableComputerBUIState pcState || Window is null)
             return;
 
+        Window.Populate(pcState);
         Window.Console.Populate(pcState);
         Window.Assembler.Populate(pcState);
     }
