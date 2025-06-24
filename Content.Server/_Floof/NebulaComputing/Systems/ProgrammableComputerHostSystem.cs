@@ -252,7 +252,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         _asmCompilerThread.EnqueueJob(ent, code, job =>
         {
             ent.Comp.IsActivelyAssembling = false;
-            if (!TerminatingOrDeleted(ent))
+            if (TerminatingOrDeleted(ent))
                 return;
 
             // This should be resumed on the game thread, so this is fine
