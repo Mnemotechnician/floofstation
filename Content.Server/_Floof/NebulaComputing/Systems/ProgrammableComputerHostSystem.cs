@@ -215,6 +215,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
                 ent.Comp.IOProvider,
                 cpuStack);
             executor.Halted = true;
+            executor.InstructionRate = ent.Comp.CPU.Value.Comp1.InstructionRate;
 
             _executorThread.AddProcessedCPU(executor);
         }
