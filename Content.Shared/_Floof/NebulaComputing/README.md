@@ -1,1 +1,1 @@
-The specifications are stored on the server side: [link](../../../Content.Server/FloofStation/SpaceComputer/specification.md)
+The specifications are stored on the server side: [link](../../../Content.Server/_Floof/NebulaComputing/VirtualCPU/specification.md)

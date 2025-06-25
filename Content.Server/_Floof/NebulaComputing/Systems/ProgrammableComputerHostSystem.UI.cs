@@ -34,7 +34,7 @@ public sealed partial class ProgrammableComputerHostSystem
             host.NextBUIUpdate = _timing.CurTime + UiUpdateInterval;
 
             var executor = host.CPU?.Comp1?.Executor;
-            var isRunning = executor?.Halted != false || !_executorThread.IsRunning(executor);
+            var isRunning = executor?.Halted == false && _executorThread.IsRunning(executor);
             var state = new ProgrammableComputerBUIState(
                 isRunning,
                 host.IOProvider?.GetConsoleOutput() ?? new(0));
@@ -57,6 +57,9 @@ public sealed partial class ProgrammableComputerHostSystem
         {
             // Start does nothing if the CPU is already running
             case PCActionRequest.Action.Start:
+                if (executor.Halted)
+                    executor.Reset(cpu.EntryPoint);
+
                 _executorThread.AddProcessedCPU(executor);
                 break;
 

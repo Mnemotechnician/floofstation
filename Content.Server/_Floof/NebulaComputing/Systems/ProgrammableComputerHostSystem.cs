@@ -216,6 +216,10 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
                 cpuStack);
             executor.Halted = true;
             executor.InstructionRate = ent.Comp.CPU.Value.Comp1.InstructionRate;
+            executor.ErrorHandler += (code, pos) =>
+            {
+                WriteLog(ent, $"[E] CPU encountered error: {code} @ 0x{pos:x8}");
+            };
 
             _executorThread.AddProcessedCPU(executor);
         }
