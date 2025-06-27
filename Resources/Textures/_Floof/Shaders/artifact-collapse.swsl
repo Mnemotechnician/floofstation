@@ -1,0 +1,56 @@
+uniform sampler2D SCREEN_TEXTURE;
+uniform highp vec2 positionInput;
+uniform highp float life; // Time between 0 and 1, where 0 is the beginning of collapse and 1 is the end
+uniform highp float range; // Distance at which particles begin to spawn
+uniform highp vec2 renderScale;
+
+const highp float PI = 3.14159265;
+const lowp int PARTICLES_START = 10;
+const lowp int PARTICLES_END = 50;
+
+// Shader authored by Mnemotechnician.
+// Most of these constants are just random numbers that seem to work more or less well.
+void fragment() {
+	highp vec2 delta = (FRAGCOORD.xy - positionInput) / (renderScale * 32.0);
+	highp float distance = length(delta);
+
+	// Mix of pulling everything closer to the center and adding particles
+    highp float deformation = tanh(life / pow(distance, 2.0));
+	highp vec2 finalCoords = FRAGCOORD.xy - deformation * delta * renderScale;
+    highp vec4 warped = zTextureSpec(SCREEN_TEXTURE, finalCoords);
+
+    // Simulate particles
+    if (distance < range) {
+        highp float particleHighlight = 0.0;
+        int particles = int(PARTICLES_START + (PARTICLES_END - PARTICLES_START) * life);
+
+        for (int i = 0; i < particles; i++) {
+            // Check if the particle lies on this line
+            vec2 direction = vec2(cos(i * 1.1234), sin(i * 1.1234)); // Pseudo-random, don't care
+            vec2 ownDirection = normalize(delta);
+            if (dot(direction, ownDirection) < 0.005) {
+                continue;
+            }
+
+            highp float phaseShift = i * PI / particles;
+            highp float phase = fract(sin(pow(life, 2) * 31.5123 + phaseShift));
+            highp float phaseMax = 0.6;
+            if (phase > phaseMax) {
+                continue;
+            }
+
+            // Reverse mapping: calculate the phase during which the particle would have appeared here, if it's currently here, highlight this pixel
+            // We assume the particles start at 0 velocity and uniform distance from the center, and fall with the speed proportional to t^2 (calculated above)
+            highp float targetPhase = distance / range;
+            if (abs(targetPhase - phase) > 0.01) {
+                continue;
+            }
+
+            particleHighlight += particleHighlight * 0.5 + 0.5;
+        }
+
+        warped.rgb = mix(warped.rgb, vec3(1, 1, 1), particleHighlight);
+    }
+
+    COLOR = warped;
+}

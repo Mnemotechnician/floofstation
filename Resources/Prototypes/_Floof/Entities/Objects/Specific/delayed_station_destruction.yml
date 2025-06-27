@@ -1,0 +1,31 @@
+- type: entity
+  id: DelayedStationDestructionBase
+  abstract: true
+  description: Oh my god RUN!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: EmitSoundOnSpawn
+    sound:
+      path: /Audio/Effects/tesla_collapse.ogg
+      params:
+        variation: 0.3
+  - type: CollapsingArtifact
+    collapseTime: 120
+
+- type: entity
+  id: DelayedSingularity
+  parent: DelayedStationDestructionBase
+  name: growing gravitational singularity
+  suffix: Delayed
+  components:
+  - type: CollapsingArtifact
+    spawnOnCollapse: Singularity
+
+- type: entity
+  id: DelayedTeslaEnergyBall
+  parent: DelayedStationDestructionBase
+  name: growing ball lightning
+  suffix: Delayed
+  components:
+  - type: CollapsingArtifact
+    spawnOnCollapse: TeslaEnergyBall

@@ -681,17 +681,25 @@
   targetDepth: 9 # Floof - Make it so they can actually occur
   effectHint: artifact-effect-hint-destruction
   components:
-  - type: SpawnArtifact
-    maxSpawns: 1
-    spawns:
-    - id: Singularity
+  - type: EmitSoundOnSpawn # Floof - modified to have a delayed spawn
+    sound:
+      path: /Audio/Effects/tesla_collapse.ogg
+      params:
+        variation: 0.3
+  - type: CollapsingArtifact # Floof - modified to have a delayed spawn
+    collapseTime: 120
+    spawnOnCollapse: Singularity
 
 - type: artifactEffect
   id: EffectTesla
   targetDepth: 9 # Floof - Make it so they can actually occur
   effectHint: artifact-effect-hint-destruction
   components:
-  - type: SpawnArtifact
-    maxSpawns: 1
-    spawns:
-    - id: TeslaEnergyBall
+  - type: EmitSoundOnSpawn # Floof - modified to have a delayed spawn
+    sound:
+      path: /Audio/Effects/singularity_collapse.ogg
+      params:
+        variation: 0.3
+  - type: CollapsingArtifact # Floof - modified to have a delayed spawn
+    collapseTime: 120
+    spawnOnCollapse: Singularity

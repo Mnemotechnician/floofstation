@@ -1,0 +1,7 @@
+- type: shader
+  id: ArtifactCollapse
+  kind: source
+  path: "/Textures/_Floof/Shaders/artifact-collapse.swsl"
+  params:
+    positionInput: 0, 0
+    life: 0

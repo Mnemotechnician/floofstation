@@ -1,3 +1,4 @@
+using Content.Client._Floof.XenoArch.DelayedStationDestruction;
 using Content.Client.Administration.Managers;
 using Content.Client.Changelog;
 using Content.Client.Chat.Managers;
@@ -160,6 +161,7 @@ namespace Content.Client.Entry
             _overlayManager.AddOverlay(new FlashOverlay());
             _overlayManager.AddOverlay(new RadiationPulseOverlay());
             _overlayManager.AddOverlay(new EmpBlastOverlay()); // Frontier
+            _overlayManager.AddOverlay(new ArtifactCollapseOverlay()); // Floofstation
             _chatManager.Initialize();
             _clientConsentManager.Initialize();
             _clientPreferencesManager.Initialize();
