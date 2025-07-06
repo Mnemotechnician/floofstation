@@ -90,6 +90,7 @@ public sealed partial class ResearchSystem
             researchServer.CurrentSoftCapMultiplier *= prototype.SoftCapContribution;
         }
 
+        // TheDen edit
         if (station != null
             && Exists(station)
             && station != EntityUid.Invalid
@@ -98,7 +99,7 @@ public sealed partial class ResearchSystem
 
         AddTechnology(serverEnt.Value, prototype);
         TrySetMainDiscipline(prototype, serverEnt.Value);
-        ModifyServerPoints(serverEnt.Value, -(int) (prototype.Cost * oldSoftCap));
+        ModifyServerPoints(serverEnt.Value, -(int) (prototype.Cost * oldSoftCap)); // TheDen - multiply by the old soft cap instead of the one
         UpdateTechnologyCards(serverEnt.Value);
 
         _adminLog.Add(

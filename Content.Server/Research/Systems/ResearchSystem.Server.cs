@@ -11,7 +11,7 @@ public sealed partial class ResearchSystem
     {
         SubscribeLocalEvent<ResearchServerComponent, ComponentStartup>(OnServerStartup);
         SubscribeLocalEvent<ResearchServerComponent, ComponentShutdown>(OnServerShutdown);
-        SubscribeLocalEvent<ResearchServerComponent, MapInitEvent>(OnServerMapInit);
+        SubscribeLocalEvent<ResearchServerComponent, MapInitEvent>(OnServerMapInit); // TheDen edit
         SubscribeLocalEvent<ResearchServerComponent, TechnologyDatabaseModifiedEvent>(OnServerDatabaseModified);
     }
 
@@ -31,6 +31,7 @@ public sealed partial class ResearchSystem
         }
     }
 
+    // TheDen section start
     private void OnServerMapInit(Entity<ResearchServerComponent> ent, ref MapInitEvent args)
     {
         var station = _station.GetOwningStation(ent);
@@ -48,6 +49,7 @@ public sealed partial class ResearchSystem
         technologyDatabase.SoftCapMultiplier = record.SoftCapMultiplier;
         ent.Comp.CurrentSoftCapMultiplier = record.SoftCapMultiplier;
     }
+    // TheDen section end
 
     private void OnServerDatabaseModified(EntityUid uid, ResearchServerComponent component, ref TechnologyDatabaseModifiedEvent args)
     {
