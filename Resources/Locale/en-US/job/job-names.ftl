@@ -12,7 +12,8 @@ job-name-senior-physician = Senior Physician
 job-name-scientist = Acolyte
 job-name-research-assistant = Noviciate
 job-name-rd = Mystagogue
-job-name-roboticist = Golemancer
+# Floof - renamed back
+job-name-roboticist = Roboticist
 job-name-psychologist = Psychologist
 job-name-intern = Medical Intern
 job-name-doctor = Medical Doctor
@@ -111,7 +112,8 @@ JobQuartermaster = Logistics Officer
 JobReporter = Reporter
 JobResearchAssistant = Noviciate
 JobResearchDirector = Mystagogue
-JobRoboticist = Golemancer
+# Floof - renamed
+JobRoboticist = Roboticist
 JobSalvageSpecialist = Salvage Specialist
 JobScientist = Acolyte
 JobSecurityCadet = Security Cadet
