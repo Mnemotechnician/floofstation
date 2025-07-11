@@ -1,0 +1,14 @@
+- type: trait
+  id: Ratvarian
+  category: TraitsSpeechLanguages
+  points: 0
+  requirements:
+  - !type:CharacterItemGroupRequirement
+    group: TraitsLanguagesBasic
+  functions:
+  - !type:TraitModifyLanguages
+    languagesSpoken:
+    - Ratvarian
+    languagesUnderstood:
+    - Ratvarian
+
