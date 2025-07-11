@@ -1,16 +1,16 @@
-trait-name-FoxLanguage = Fox
+trait-name-FoxLanguage = Fox language
 trait-description-FoxLanguage = You speak the mysterious and exciting language of foxes.
 
-trait-name-DogLanguage = Dog
+trait-name-DogLanguage = Dog language
 trait-description-DogLanguage = Those barks and whines have more meaning to you than they do to others.
 
-trait-name-CatLanguage = Cat
+trait-name-CatLanguage = Cat language
 trait-description-CatLanguage = Those meows and purrs have more meaning to you than they do to others.
 
-trait-name-MonkeyLanguage = Monkey
+trait-name-MonkeyLanguage = Monkey language
 trait-description-MonkeyLanguage = Ook aak! You can speak the language of monkeys.
 
-trait-name-KoboldLanguage = Kobold
+trait-name-KoboldLanguage = Kobold language
 trait-description-KoboldLanguage = Yip yip! You can speak the language of kobolds.
 
 

@@ -19,6 +19,7 @@
   category: TraitsSpeechLanguages
   points: 0
   slots: 0
+  priority: -2
   requirements:
   - !type:CharacterItemGroupRequirement
     group: TraitsLanguagesBasic
@@ -35,6 +36,8 @@
   id: DogLanguage
   category: TraitsSpeechLanguages
   points: 0
+  slots: 0
+  priority: -2
   requirements:
   - !type:CharacterItemGroupRequirement
     group: TraitsLanguagesBasic
@@ -52,6 +55,8 @@
   id: CatLanguage
   category: TraitsSpeechLanguages
   points: 0
+  slots: 0
+  priority: -2
   requirements:
   - !type:CharacterItemGroupRequirement
     group: TraitsLanguagesBasic
@@ -71,6 +76,8 @@
   id: MonkeyLanguage
   category: TraitsSpeechLanguages
   points: 0
+  slots: 0
+  priority: -2
   requirements:
   - !type:CharacterItemGroupRequirement
     group: TraitsLanguagesBasic
@@ -90,6 +97,8 @@
   id: KoboldLanguage
   category: TraitsSpeechLanguages
   points: 0
+  slots: 0
+  priority: -2
   requirements:
   - !type:CharacterItemGroupRequirement
     group: TraitsLanguagesBasic
