@@ -1,17 +1,17 @@
-trait-name-FoxLanguage = Fox language
-trait-description-FoxLanguage = You speak the mysterious and exciting language of foxes.
+trait-name-FoxLanguage = {language-Fox-name}
+trait-description-FoxLanguage = {language-Fox-description} You speak it natively.
 
-trait-name-DogLanguage = Dog language
-trait-description-DogLanguage = Those barks and whines have more meaning to you than they do to others.
+trait-name-DogLanguage = {language-Dog-name}
+trait-description-DogLanguage = {language-Dog-description} You speak it natively.
 
-trait-name-CatLanguage = Cat language
-trait-description-CatLanguage = Those meows and purrs have more meaning to you than they do to others.
+trait-name-CatLanguage = {language-Cat-name}
+trait-description-CatLanguage = {language-Cat-description} You speak it natively.
 
-trait-name-MonkeyLanguage = Monkey language
-trait-description-MonkeyLanguage = Ook aak! You can speak the language of monkeys.
+trait-name-MonkeyLanguage = {language-Monkey-name}
+trait-description-MonkeyLanguage = {language-Monkey-description} You speak it natively.
 
-trait-name-KoboldLanguage = Kobold language
-trait-description-KoboldLanguage = Yip yip! You can speak the language of kobolds.
+trait-name-KoboldLanguage = {language-Kobold-name}
+trait-description-KoboldLanguage = {language-Kobold-description} You speak it natively.
 
 
 trait-name-Ratvarian = Ratvarian
