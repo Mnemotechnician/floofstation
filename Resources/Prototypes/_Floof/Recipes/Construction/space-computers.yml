@@ -1,0 +1,115 @@
+- type: construction
+  name: programmable computer
+  id: ComputerProgrammable
+  graph: ComputerProgrammable
+  startNode: start
+  targetNode: computer
+  category: construction-category-machines
+  description: A programmable computer.
+  icon:
+    sprite: _Floof/Objects/Structures/NebulaComputing/computer.rsi
+    state: base
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canRotate: false
+  canBuildInImpassable: false
+  conditions:
+  - !type:TileNotBlocked
+
+
+- type: constructionGraph
+  id: ComputerProgrammable
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: frame
+      completed:
+      - !type:SetAnchor
+        value: false
+      steps:
+      - material: Steel
+        amount: 10
+        doAfter: 3
+
+
+  # This is just so future steps don't reset the entity unless you take everything out and snip the wires
+  - node: frameMissingWires
+    entity: ComputerProgrammable
+    edges:
+    - to: start
+      completed:
+      - !type:SpawnPrototype
+        prototype: SheetSteel1
+        amount: 10
+      steps:
+      - tool: Screwing
+    - to: frame
+      steps:
+      - material: Cable
+        amount: 5
+        doAfter: 1
+
+
+  # Actual frame where you insert components
+  - node: frame
+    edges:
+    - to: frameMissingWires
+      completed:
+      - !type:EmptyAllContainers
+      - !type:SpawnPrototype
+        prototype: CableApcStack1
+        amount: 5
+      steps:
+      - tool: Cutting
+
+    - to: frameAssembled
+      conditions:
+      - !type:EntityAnchored { }
+      steps:
+      - tag: ComputerCPU
+        name: central processing unit
+        store: cpu
+        icon:
+          sprite: _Floof/Objects/Structures/NebulaComputing/components.rsi
+          state: cpu-basic
+        doAfter: 1
+      - tag: ComputerRAM
+        name: a random access memory
+        store: memory
+        icon:
+          sprite: _Floof/Objects/Structures/NebulaComputing/components.rsi
+          state: ram-basic
+        doAfter: 1
+      - tag: ComputerStorage
+        name: a storage drive
+        store: storage
+        icon:
+          sprite: _Floof/Objects/Structures/NebulaComputing/components.rsi
+          state: hard-drive-basic
+        doAfter: 1
+
+
+  - node: frameAssembled
+    edges:
+    - to: frame
+      completed:
+      - !type:EmptyAllContainers
+      steps:
+      - tool: Prying
+
+    - to: computer
+      steps:
+      - tool: Screwing
+
+
+  # Completed
+  - node: computer
+    edges:
+    - to: frame # This skips the frameAssembled step.
+      conditions:
+      - !type:WirePanel
+        open: true
+      steps:
+      - tool: Prying
+

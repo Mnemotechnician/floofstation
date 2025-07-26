@@ -62,7 +62,7 @@
     - CustomPort2
     - CustomPort3
     - CustomPort4
-
+  - type: WiresPanel
 
 
 - type: entity
@@ -70,6 +70,11 @@
   parent: [ ComputerProgrammableBase ]
   name: programmable computer
   description: A peak of technology.
+  components:
+  - type: ProgrammableComputerHost
+  - type: Construction
+    graph: ComputerProgrammable
+    node: computer
 
 
 
