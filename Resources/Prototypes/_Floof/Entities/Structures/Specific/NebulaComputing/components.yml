@@ -31,6 +31,8 @@
   - type: Memory
     capacity: 1000 # In bytes.
     kind: CPUOperationStack
+  - type: Tag
+    tags: [ComputerCPU]
 
 # Memory
 - type: entity
@@ -44,8 +46,11 @@
   - type: Memory
     capacity: 10000 # In bytes.
     kind: RandomAccess
+  - type: Tag
+    tags: [ComputerRAM]
 
 # Storage
+# TODO unused
 - type: entity
   id: ComputerHardDiskBasic
   parent: ComputerComponentBase
@@ -57,3 +62,5 @@
   - type: Memory
     capacity: 100000 # In bytes.
     kind: Persistent
+  - type: Tag
+    tags: [ComputerStorage]

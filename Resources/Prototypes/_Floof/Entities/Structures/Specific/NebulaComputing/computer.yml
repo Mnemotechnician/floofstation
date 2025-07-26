@@ -21,19 +21,19 @@
         startingItem: ComputerCPUBasic
         swap: false
         whitelist:
-          components: [CPU]
+          tags: [ComputerCPU]
       memory:
         name: computer-slot-name-memory
         startingItem: ComputerMemoryBasic
         swap: false
         whitelist:
-          components: [Memory]
+          tags: [ComputerRAM]
       storage:
         name: computer-slot-name-storage
         startingItem: ComputerHardDiskBasic
         swap: false
         whitelist:
-          components: [Memory]
+          tags: [ComputerStorage]
   - type: ContainerContainer
     containers:
       cpu: !type:ContainerSlot

@@ -1,0 +1,8 @@
+- type: tag
+  id: ComputerRAM
+
+- type: tag
+  id: ComputerCPU
+
+- type: tag
+  id: ComputerStorage
