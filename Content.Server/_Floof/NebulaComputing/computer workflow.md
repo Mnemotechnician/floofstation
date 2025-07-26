@@ -1,3 +1,5 @@
+# TODO not yet implemented
+
 # Startup
 Computer starts by setting the instruction counter at 0, resetting RAM,
 and reading the program definition from the first bytes of the storage device.

@@ -103,7 +103,7 @@ public sealed partial class ProgrammableComputerHostSystem
         if (data.TryGetValue<int>(DeviceNetworkPortValueMessage, out var literalValue))
             msg = literalValue; // Another computer sent this <3
         else if (data.TryGetValue<SignalState>(DeviceNetworkConstants.LogicState, out var state))
-            msg = state == SignalState.High ? 1 : 0; // Logic gate or similar
+            msg = state == SignalState.High ? 1 : -1; // Logic gate or similar
         else
             msg = 1; // Default is 1 for things like remote signallers and similar.
 

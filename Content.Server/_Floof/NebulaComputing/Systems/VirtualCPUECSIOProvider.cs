@@ -40,9 +40,10 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
                 // Disk IO is currently not implemented.
                 return false;
 
-            default:
+            case >=FirstPinPort:
+            {
                 var portNumber = port - FirstPinPort;
-                if (portNumber < 0 || portNumber >= ent.Comp.OutputPorts)
+                if (portNumber >= ent.Comp.OutputPorts)
                     throw new CPUExecutionException(CPUErrorCode.InvalidPort);
 
                 lock (_outputPortQueues)
@@ -56,7 +57,10 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
                 }
 
                 return true;
+            }
 
+            default:
+                throw new CPUExecutionException(CPUErrorCode.InvalidPort);
         }
     }
 
@@ -77,18 +81,38 @@ public sealed class VirtualCPUECSIOProvider(Entity<ProgrammableComputerHostCompo
                 // Disk IO is currently not implemented.
                 return (false, CPUMemoryCell.Zero);
 
-            default:
-                var portNumber = port - FirstPinPort;
-                if (portNumber < 0 || portNumber >= ent.Comp.InputPorts)
+            // Ports 21..24 - check if pin 1..4 has inputs
+            case >= FirstCheckInputPort:
+            {
+                var portNumber = port - FirstCheckInputPort;
+                if (portNumber >= ent.Comp.InputPorts)
                     throw new CPUExecutionException(CPUErrorCode.InvalidPort);
 
-                lock (_consoleInputKeyCodes)
+                lock (_inputPortQueues)
+                {
+                    var hasInput = _inputPortQueues.TryGetValue(portNumber, out var queue) && !queue.IsEmpty();
+                    return (true, hasInput ? CPUMemoryCell.One : CPUMemoryCell.Zero);
+                }
+            }
+
+            // Ports 11.14 - read pins 1..4
+            case >= FirstPinPort:
+            {
+                var portNumber = port - FirstPinPort;
+                if (portNumber >= ent.Comp.InputPorts)
+                    throw new CPUExecutionException(CPUErrorCode.InvalidPort);
+
+                lock (_inputPortQueues)
                 {
                     if (!_inputPortQueues.TryGetValue(portNumber, out var queue) || queue.IsEmpty())
                         return (false, CPUMemoryCell.Zero);
 
                     return (true, CPUMemoryCell.FromInt32(queue.Dequeue()));
                 }
+            }
+
+            default:
+                throw new CPUExecutionException(CPUErrorCode.InvalidPort);
         }
     }
 

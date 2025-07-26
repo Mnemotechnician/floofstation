@@ -11,6 +11,7 @@ namespace Content.Server._Floof.NebulaComputing.VirtualCPU;
 public struct CPUMemoryCell
 {
     public static CPUMemoryCell Zero => new();
+    public static CPUMemoryCell One => FromInt32(1);
 
     [FieldOffset(0)]
     public uint UInt32;

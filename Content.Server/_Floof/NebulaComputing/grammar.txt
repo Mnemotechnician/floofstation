@@ -1,4 +1,4 @@
-SpaceC grammar
+TODO: NebulaC grammar
 
 #####################
 # Pre-lex definions #
@@ -65,8 +65,6 @@ code_block ::= lbracket body rbracket
 
 statement ::= expression
 | variable_def
-#           | function_def #TODO
-            | kecho expression     # Logging into console
 
 
 # Expressions

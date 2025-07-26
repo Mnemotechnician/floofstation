@@ -7,6 +7,7 @@ using IS = InstructionSet;
 // ReSharper disable InconsistentNaming
 // ReSharper disable MissingLinebreak
 
+// TODO this must be refactored to use registers like EAX, EBX, ECX, EDX... Stack-based computation SUCKS
 /// <summary>
 ///     A single computing unit.
 /// </summary>
@@ -453,7 +454,8 @@ public abstract class VirtualCPUIOProvider
     public const int ConsolePort = 0,
                      DiskPort = 1,
                      Reserved = 10,
-                     FirstPinPort = Reserved + 1;
+                     FirstPinPort = Reserved + 1,
+                     FirstCheckInputPort = FirstPinPort + 10;
 
     public abstract bool TryWrite(int port, CPUMemoryCell message);
 

@@ -2,40 +2,40 @@
 - type: sourcePort
   id: CustomPort1
   name: signal-port-name-custom-port-1
-  description: signal-port-name-custom-port-1
+  description: signal-port-description-custom
 
 - type: sourcePort
   id: CustomPort2
   name: signal-port-name-custom-port-2
-  description: signal-port-name-custom-port-2
+  description: signal-port-description-custom
 
 - type: sourcePort
   id: CustomPort3
   name: signal-port-name-custom-port-3
-  description: signal-port-name-custom-port-3
+  description: signal-port-description-custom
 
 - type: sourcePort
   id: CustomPort4
   name: signal-port-name-custom-port-4
-  description: signal-port-name-custom-port-4
+  description: signal-port-description-custom
 
 
 - type: sinkPort
   id: CustomPort1
-  name: signal-port-name-on-receiver
-  description: signal-port-description-on-receiver
+  name: signal-port-name-custom-port-1
+  description: signal-port-description-custom
 
 - type: sinkPort
   id: CustomPort2
-  name: signal-port-name-on-receiver
-  description: signal-port-description-on-receiver
+  name: signal-port-name-custom-port-2
+  description: signal-port-description-custom
 
 - type: sinkPort
   id: CustomPort3
-  name: signal-port-name-on-receiver
-  description: signal-port-description-on-receiver
+  name: signal-port-name-custom-port-3
+  description: signal-port-description-custom
 
 - type: sinkPort
   id: CustomPort4
-  name: signal-port-name-on-receiver
-  description: signal-port-description-on-receiver
+  name: signal-port-name-custom-port-4
+  description: signal-port-description-custom

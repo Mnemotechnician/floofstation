@@ -2,7 +2,7 @@
 This is a specification for the NebulaASM assembly language.
 
 NebulaASM is a primitive assembly language. It does not feature advanced capabilities like multi-file processing,
-functions, structures, and other features modern assembly languages have.
+structures, and other features modern assembly languages have.
 
 # Syntax
 A NebulaASM program is a sequence of statements.
@@ -50,7 +50,7 @@ from popping the stack. The list of all can be found in the CPU specification.
 ```asm
 push charArrayLabel     // Load the address of a char array
 psp load onstack        // Load the character from it without popping the address
-psp jmpc zero someLabel // Jump if zero, do not pop the stack
+psp jmpc someLabel zero // Jump if zero, do not pop the stack
 ```
 
 # Numbers
@@ -122,8 +122,25 @@ Arrays are created using the following syntax:
         store counter
 
         push 10
-        jmpc lower loop
+        cmp lower
+        jmpc loop one
     end:
     halt
 }
 ```
+
+# Functions
+You can implement functions by wrapping the function code in a section and using a `ret` instruction at its end.
+You can then call the function by using the `call` command with the section name as the argument.
+
+Arguments can be passed through the stack by `push`ing them on the stack before `call`ing the function.
+Note that when you use the `call` instruction, the CPU puts the return address on the stack.
+
+You can access arguments inside the function using the `dup <arg_count - arg_idx + 1>` syntax.
+This will read the `arg_idx`th argument and put it on top of the stack.
+
+The `ret <after call pops> <before call pops>` instruction accepts two arguments:
+- `<after call pops>` is the number of values the CPU must clear from the stack before reading the return address.
+  This is effectively the amount of stack memory the function has reserved.
+- `<before call pops>` is the amount of values the CPU must clear from the stack AFTER reading the return address.
+  This is effectively the number of arguments the function accepts, allows the callee to do post-call cleanup.
