@@ -77,7 +77,7 @@ public sealed class VirtualCPU(
     {
         Halted = Waiting = false;
         ProgramCounter = pc;
-        StackPos = 0;
+        StackPos = StackBeginAddr;
     }
 
     public void ProcessTicks(int ticks)
@@ -499,17 +499,17 @@ public sealed class VirtualCPU(
         if (StackPos > end)
             throw new CPUExecutionException(CPUErrorCode.StackOverflow);
 
-        // Value will be stored in the cell at the stack pointer
-        DataProvider.SetValue(StackPos++, value);
+        // Value will be stored in the cell after the current one, and that's where RSP will point at
+        DataProvider.SetValue(++StackPos, value);
     }
 
     private CPUMemoryCell Pop()
     {
-        if (StackPos == 0)
+        if (StackPos <= StackBeginAddr)
             throw new CPUExecutionException(CPUErrorCode.StackUnderflow);
 
-        // Value is located in the cell before the stack pointer
-        return DataProvider.GetValue(--StackPos);
+        // Value is retrieved from the address RSP is pointing at, and then RSP will be decremented
+        return DataProvider.GetValue(StackPos--);
     }
 
     private CPUMemoryCell ReadNext() => DataProvider.GetValue(ProgramCounter++);
@@ -531,28 +531,36 @@ public sealed class VirtualCPU(
                 return argument;
 
             case CPUInstructionCell.DataLocation.Register:
-            {
-                if (argument.UInt32 > Registers.Length)
-                    throw new CPUExecutionException(CPUErrorCode.IllegalRegister);
-
-                return Registers[argument.UInt32];
-            }
+                return ResolveComplexRegisterOperand(argument);
 
             case CPUInstructionCell.DataLocation.Static:
                 return DataProvider.GetValue(argument.UInt32);
 
             case CPUInstructionCell.DataLocation.Dynamic:
-            {
-                if (argument.UInt32 > Registers.Length)
-                    throw new CPUExecutionException(CPUErrorCode.IllegalRegister);
-
-                var pointer = Registers[argument.UInt32];
+                var pointer = ResolveComplexRegisterOperand(argument);
                 return DataProvider.GetValue(pointer.UInt32);
-            }
 
             default:
                 throw new CPUExecutionException(CPUErrorCode.IllegalInstruction); // Should never happen
         }
+    }
+
+    /// <summary>
+    ///     Resolves a register value as per specification.
+    ///     The bottommost 8 bits indicate the register, the middle 16 bits indicate offset, and topmost 8 bits indicate bitshift.
+    ///     The final formula is: (registerValue shl topmostBytes) + middleBytes
+    /// </summary>
+    /// <returns></returns>
+    private CPUMemoryCell ResolveComplexRegisterOperand(CPUMemoryCell argument)
+    {
+        var register = argument.Byte1;
+        if (register > Registers.Length)
+            throw new CPUExecutionException(CPUErrorCode.IllegalRegister);
+
+        // Using integers here because using those together with other int32 operands would result in them getting cast to int32 anyway
+        int offset = argument.Middle;
+        int shift = argument.Byte4;
+        return CPUMemoryCell.FromInt32((Registers[register].Int32 << shift) + offset);
     }
 
     /// <summary>
@@ -581,11 +589,12 @@ public sealed class VirtualCPU(
 
             case CPUInstructionCell.DataLocation.Dynamic:
             {
-                if (argument.UInt32 > Registers.Length)
+                // As per specification, the middle bytes signify the offset and the upmost byte signifies the shift
+                if (argument.Byte1 > Registers.Length)
                     throw new CPUExecutionException(CPUErrorCode.IllegalRegister);
 
-                var pointer = Registers[argument.UInt32];
-                DataProvider.SetValue(pointer.UInt32, value);
+                var pointer = (Registers[argument.Byte1].UInt32 << argument.Byte4) + (uint) argument.Middle;
+                DataProvider.SetValue(pointer, value);
                 break;
             }
 

@@ -28,6 +28,10 @@ public sealed partial class VirtualCPUTest
     /// Convenience function to compose an address considering the default stack size.
     public int Addr(int addr, int offset = DefaultStackSize) => addr + offset;
 
+    /// Convenience function to compose a register reference
+    public int Register(CPURegister reg, short offset = 0, byte shift = 0) =>
+        new CPUMemoryCell { Byte1 = (byte) reg, Middle = offset, Byte4 = shift }.Int32;
+
     public (int[] code, uint entryPoint) Assemble(string asm)
     {
         var assembler = new VCPUAssemblyCompiler();

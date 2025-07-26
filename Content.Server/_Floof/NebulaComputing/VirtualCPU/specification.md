@@ -13,10 +13,15 @@ The CPU has a set of registers used to store intermediate and operational values
 # Instruction Set Overview
 
 Operands can be:
-0. Immediate - constant data.
+0. Immediate - 32 bits of constant data.
 1. Register - data is stored in a register like RAX, RSP, RIP.
 2. Static - data is stored in a static memory location.
 3. Dynamic - data is stored in a memory location specified by a register.
+
+In register and dynamic operands, the lowest byte indicates the register to use, then 16 middle bytes is a short signed integer indicating offset,
+and 8 topmost bytes is a signed byte indicating bitshift. The effective formula is: (registerValue << topmostBytes) + middleBytes.
+Note that this is not supported in floating-point operations as they use a different memory layout,
+and when writing data, this complex behavior is only supported in the "dynamic" mode.
 
 The opcode is encoded as the first byte of an instruction
 The types of operands are encoded as byte 2 of the opcode, 2 bits per operand.

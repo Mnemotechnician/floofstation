@@ -21,6 +21,22 @@ public struct CPUMemoryCell
     [FieldOffset(0)]
     public float Single;
 
+    /// The bits 0..7 of this memory cell
+    [FieldOffset(0)] public byte Byte1;
+    /// The bits 8..15 of this memory cell
+    [FieldOffset(1)] public byte Byte2;
+    /// The bits 16..23 of this memory cell
+    [FieldOffset(2)] public byte Byte3;
+    /// The bits 23..31 of this memory cell
+    [FieldOffset(3)] public byte Byte4;
+
+    /// The bits 0..15 of this memory cell
+    [FieldOffset(0)] public short Low;
+    /// The bits 8..23 of this memory cell
+    [FieldOffset(1)] public short Middle;
+    /// The bits 16..31 of this memory cell
+    [FieldOffset(2)] public short High;
+
     /// <remarks>Use with caution, may lose some bits of data.</remarks>
     public char Char => (char) Int32;
 
