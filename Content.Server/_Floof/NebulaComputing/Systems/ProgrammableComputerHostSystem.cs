@@ -1,18 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Content.Server._Floof.NebulaComputing.Components;
 using Content.Server._Floof.NebulaComputing.VirtualCPU;
 using Content.Server._Floof.NebulaComputing.VirtualCPU.Assembly;
 using Content.Server.GameTicking;
-using Content.Shared._Floof.NebulaComputing.UI;
 using Content.Shared.GameTicking;
-using Content.Shared.Interaction;
 using Content.Shared.Popups;
-using Content.Shared.Storage;
-using Content.Shared.Verbs;
+using Content.Shared.Power;
+using Robust.Server.GameObjects;
 using Robust.Shared.Containers;
-using Robust.Shared.CPUJob.JobQueues.Queues;
-using Robust.Shared.Utility;
 
 
 namespace Content.Server._Floof.NebulaComputing.Systems;
@@ -20,9 +15,10 @@ namespace Content.Server._Floof.NebulaComputing.Systems;
 
 public sealed partial class ProgrammableComputerHostSystem : EntitySystem
 {
-    [Robust.Shared.IoC.Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
-    [Robust.Shared.IoC.Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Robust.Shared.IoC.Dependency] private readonly SharedContainerSystem _container = default!;
+    [Dependency] private readonly AppearanceSystem _appearance = default!;
+    [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
+    [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private readonly SharedContainerSystem _container = default!;
 
     private readonly VirtualCPUExecutorThread _executorThread = new();
     private readonly VirtualCPUAsmCompilerThread _asmCompilerThread = new();
@@ -34,8 +30,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
 
         SubscribeLocalEvent<CPUComponent, ComponentShutdown>(OnCPUShuttingDown);
         SubscribeLocalEvent<CPUComponent, EntGotRemovedFromContainerMessage>(OnCPURemoved);
-        SubscribeLocalEvent<ProgrammableComputerHostComponent, AfterInteractEvent>(OnComputerClicked);
-        SubscribeLocalEvent<ProgrammableComputerHostComponent, GetVerbsEvent<InteractionVerb>>(OnGetComputerVerbs);
+        SubscribeLocalEvent<ProgrammableComputerHostComponent, PowerChangedEvent>(OnPowerChanged);
 
         InitializePortsHandling();
         InitializeUI();
@@ -81,29 +76,20 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
             _executorThread.RemoveProcessedCPU(executor);
     }
 
-    private void OnComputerClicked(Entity<ProgrammableComputerHostComponent> ent, ref AfterInteractEvent args)
+    private void OnPowerChanged(Entity<ProgrammableComputerHostComponent> ent, ref PowerChangedEvent args)
     {
-        if (!args.CanReach)
+        if (args.Powered)
             return;
 
-        TryOpenUI(args.User, ent);
-        args.Handled = true;
-    }
+        // Reset the executor
+        if (ent.Comp.CPU?.Comp1?.Executor is {} executor)
+            _executorThread.RemoveProcessedCPU(executor);
 
-    private void OnGetComputerVerbs(Entity<ProgrammableComputerHostComponent> ent, ref GetVerbsEvent<InteractionVerb> args)
-    {
-        if (!args.CanAccess || !args.CanInteract)
-            return;
-
-        var user = args.User;
-        var verb = new InteractionVerb()
-        {
-            Act = () => TryOpenUI(user, ent),
-            Text = Loc.GetString("programmable-computer-verb-open"),
-            IconEntity = GetNetEntity(ent),
-            Priority = 5
-        };
-        args.Verbs.Add(verb);
+        // Reset CPU stack as well. RAM is currently unaffected because there's no way to write programs to the disk.
+        if (ent.Comp.CPU?.Comp2?.StackData is {} stack)
+            Nullify(stack);
+        // if (ent.Comp.Memory?.Comp?.RandomAccessData is { } memory)
+        //     Nullify(memory);
     }
 
     /// <summary>
@@ -234,17 +220,6 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         return true;
     }
 
-    public bool TryOpenUI(EntityUid user, Entity<ProgrammableComputerHostComponent> computer)
-    {
-        if (!TrySetUpComputer(computer, out var error))
-        {
-            _popup.PopupEntity(Loc.GetString(error, ("uid", computer)), computer, PopupType.Medium);
-            return false;
-        }
-
-        return _ui.TryOpenUi(computer.Owner, ProgrammableComputerUiKey.Key, user, false);
-    }
-
     public void CompileAndSetAssembly(Entity<ProgrammableComputerHostComponent> ent, string code, bool toRun, bool saveCode = true)
     {
         WriteLog(ent, $"[I] Compiling... {code.Length} bytes. {(toRun ? "Will run the code afterwards." : "")}");
@@ -268,7 +243,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
 
             if (!result.success || result.code is null)
             {
-                WriteLog(ent, $"[E] Compilation failed:");
+                WriteLog(ent, "[E] Compilation failed:");
                 foreach (var error in job.Compiler.Errors ?? [])
                     WriteLog(ent, $"[E] {error}");
                 return;
@@ -292,13 +267,22 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         });
     }
 
-    private void MemCopy(CPUMemoryCell[] dst, int dstOffset, int[] src, int srcOffset)
+    private static void MemCopy(CPUMemoryCell[] dst, int dstOffset, int[] src, int srcOffset)
     {
         var num = Math.Min(dst.Length - dstOffset, src.Length - srcOffset);
         // Fast memcopy when? C# doesn't allow it due to array type mismatch
         // Would need to do a reinterpret cast or something similarly unsafe, or change the compiler to use CPUMemoryCell
         for (var i = 0; i < num; ++i)
             dst[dstOffset + i].Int32 = src[srcOffset + i];
+    }
+
+    /// <summary>
+    ///     Overwrites the array with zeros.
+    /// </summary>
+    public static void Nullify(CPUMemoryCell[] arr)
+    {
+        for (var i = 0; i < arr.Length; ++i)
+            arr[i] = CPUMemoryCell.Zero;
     }
 
     public void WriteLog(Entity<ProgrammableComputerHostComponent> ent, string data, bool trailingNewline = true)

@@ -5,16 +5,41 @@
   description: A peak of technology.
   abstract: true
   components:
+  # Visual
   - type: Sprite
     sprite: _Floof/Objects/Structures/NebulaComputing/computer.rsi
     layers:
     - state: base
     - state: working
       shader: unshaded
+      map: [ working ]
     - state: printing
       shader: unshaded
+      map: [ printing ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.PowerDeviceVisuals.Powered:
+        working:
+          True: { visible: true }
+          False: { visible: false }
+      enum.ProgrammableComputerVisuals.IsPrinting:
+        printing:
+          True: { visible: true }
+          False: { visible: false }
   - type: InteractionOutline
-  - type: ItemSlots # TODO: move the components to shared so the whitelist can pass client-side
+  # Powered
+  - type: ExtensionCableReceiver
+  - type: ApcPowerReceiver
+    powerLoad: 5000 # running assembly is power-consuming, you know?
+  - type: LitOnPowered
+  - type: PointLight
+    radius: 1.5
+    energy: 1.6
+    color: green
+    castShadows: false
+  # Slots
+  - type: ItemSlots
     slots:
       cpu:
         name: computer-slot-name-cpu
@@ -39,11 +64,16 @@
       cpu: !type:ContainerSlot
       memory: !type:ContainerSlot
       storage: !type:ContainerSlot
+  # UI
+  # TODO reset RAM/PC on power loss
+  - type: ActivatableUI
+    key: enum.ProgrammableComputerUiKey.Key
+  - type: ActivatableUIRequiresPower
   - type: UserInterface
     interfaces:
       enum.ProgrammableComputerUiKey.Key:
         type: ProgrammableComputerBUI
-  - type: ProgrammableComputerHost
+  - type: Clickable
   # Device links
   - type: DeviceNetwork
     deviceNetId: Wireless

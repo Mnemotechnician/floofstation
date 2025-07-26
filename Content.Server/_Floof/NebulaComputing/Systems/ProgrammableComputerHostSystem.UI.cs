@@ -1,6 +1,8 @@
 using Content.Server._Floof.NebulaComputing.Components;
 using Content.Shared._Floof.NebulaComputing.UI;
 using Content.Shared._Floof.NebulaComputing.UI.Events;
+using Content.Shared.Popups;
+using Content.Shared.UserInterface;
 
 
 namespace Content.Server._Floof.NebulaComputing.Systems;
@@ -13,6 +15,8 @@ public sealed partial class ProgrammableComputerHostSystem
 
     private void InitializeUI()
     {
+        SubscribeLocalEvent<ProgrammableComputerHostComponent, ActivatableUIOpenAttemptEvent>(OnUIOpenAttempt);
+
         Subs.BuiEvents<ProgrammableComputerHostComponent>(ProgrammableComputerUiKey.Key,
         subs =>
         {
@@ -46,6 +50,12 @@ public sealed partial class ProgrammableComputerHostSystem
         }
 
         query.Dispose();
+    }
+
+    private void OnUIOpenAttempt(Entity<ProgrammableComputerHostComponent> ent, ref ActivatableUIOpenAttemptEvent args)
+    {
+        if (!TryOpenUI(args.User, ent, dryRun: true))
+            args.Cancel();
     }
 
     private void OnActionRequest(Entity<ProgrammableComputerHostComponent> ent, ref PCActionRequest args)
@@ -87,5 +97,19 @@ public sealed partial class ProgrammableComputerHostSystem
         }
 
         CompileAndSetAssembly(ent, args.Code, args.Run);
+    }
+
+    /// <summary>
+    ///     Try to open programmable computer ui. If dryRun is true, only do the preparations needed to open a ui, but do not actually invoke the ui system.
+    /// </summary>
+    public bool TryOpenUI(EntityUid user, Entity<ProgrammableComputerHostComponent> computer, bool dryRun = false)
+    {
+        if (!TrySetUpComputer(computer, out var error))
+        {
+            _popup.PopupEntity(Loc.GetString(error, ("uid", computer)), computer, PopupType.Medium);
+            return false;
+        }
+
+        return dryRun || _ui.TryOpenUi(computer.Owner, ProgrammableComputerUiKey.Key, user, false);
     }
 }
