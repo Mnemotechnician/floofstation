@@ -62,8 +62,7 @@ public sealed partial class ProgrammableComputerHostSystem
 
             foreach (var (port, queue) in messages)
             {
-                // Port 11 corresponds to CustomPort1, port 12 to CustomPort2, etc
-                var portName = PortNamePrefix + (port - VirtualCPUIOProvider.FirstPinPort + 1);
+                var portName = PortNamePrefix + port;
                 foreach (var message in queue)
                 {
                     // I hate ss14's device network system.
