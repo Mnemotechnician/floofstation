@@ -28,44 +28,15 @@
           True: { visible: true }
           False: { visible: false }
   - type: InteractionOutline
-  # Powered
-  - type: ExtensionCableReceiver
-  - type: ApcPowerReceiver
-    powerLoad: 5000 # running assembly is power-consuming, you know?
-  - type: LitOnPowered
-  - type: PointLight
-    radius: 1.5
-    energy: 1.6
-    color: green
-    castShadows: false
   # Slots
-  - type: ItemSlots
-    slots:
-      cpu:
-        name: computer-slot-name-cpu
-        startingItem: ComputerCPUBasic
-        swap: false
-        whitelist:
-          tags: [ComputerCPU]
-      memory:
-        name: computer-slot-name-memory
-        startingItem: ComputerMemoryBasic
-        swap: false
-        whitelist:
-          tags: [ComputerRAM]
-      storage:
-        name: computer-slot-name-storage
-        startingItem: ComputerHardDiskBasic
-        swap: false
-        whitelist:
-          tags: [ComputerStorage]
   - type: ContainerContainer
     containers:
-      cpu: !type:ContainerSlot
-      memory: !type:ContainerSlot
-      storage: !type:ContainerSlot
+      cpu: !type:Container
+      memory: !type:Container
+      storage: !type:Container
   # UI
   # TODO reset RAM/PC on power loss
+  - type: Clickable
   - type: ActivatableUI
     key: enum.ProgrammableComputerUiKey.Key
   - type: ActivatableUIRequiresPower
@@ -73,7 +44,7 @@
     interfaces:
       enum.ProgrammableComputerUiKey.Key:
         type: ProgrammableComputerBUI
-  - type: Clickable
+  - type: ProgrammableComputerHost
   # Device links
   - type: DeviceNetwork
     deviceNetId: Wireless
@@ -92,19 +63,46 @@
     - CustomPort2
     - CustomPort3
     - CustomPort4
-  - type: WiresPanel
 
 
+# Already assembled
 - type: entity
-  id: ComputerProgrammable
-  parent: [ ComputerProgrammableBase ]
+  id: ComputerProgrammableCompleted
+  parent: ComputerProgrammableBase
   name: programmable computer
-  description: A peak of technology.
+  suffix: assembled
   components:
-  - type: ProgrammableComputerHost
+  - type: WiresPanel # The in-construction version doesn't have it because it conflicts with the screwing step.
   - type: Construction
     graph: ComputerProgrammable
     node: computer
+  - type: ContainerFill
+    containers:
+      cpu: [ComputerCPUBasic]
+      memory: [ComputerMemoryBasic]
+      storage: [ComputerHardDiskBasic]
+  # Powered
+  - type: Anchorable
+  - type: ExtensionCableReceiver
+  - type: ApcPowerReceiver
+    powerLoad: 5000 # running assembly is power-consuming, you know?
+  - type: Battery
+    maxCharge: 30000 # Enough to survive a power flicker, but not to stay powered during outage
+    startingCharge: 0
+  - type: LitOnPowered
+  - type: PointLight
+    radius: 1.5
+    energy: 1.6
+    color: green
+    castShadows: false
 
-
-
+# Mid assembly
+- type: entity
+  id: ComputerProgrammableAssembly
+  parent: ComputerProgrammableBase
+  suffix: under construction
+  components:
+  - type: Construction
+    graph: ComputerProgrammable
+    node: frameMissingWires
+    defaultTarget: computer

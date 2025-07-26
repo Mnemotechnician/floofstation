@@ -8,6 +8,7 @@ using Content.Shared.Popups;
 using Content.Shared.Power;
 using Robust.Server.GameObjects;
 using Robust.Shared.Containers;
+using Robust.Shared.Utility;
 
 
 namespace Content.Server._Floof.NebulaComputing.Systems;
@@ -103,16 +104,17 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         Entity<ProgrammableComputerHostComponent> ent,
         [NotNullWhen(false)] out string? error,
         bool resetNonPersistent = false,
-        bool resetPersistent = false
-    )
+        bool resetPersistent = false)
     {
+        // Note: the misleading name is caused by the fact that initially computers used ItemSlots to store components
+        // It's been changed because turns out the construction system doesn't support them. It may change in the future.
         bool TryGetContainerSlot(string name, [NotNullWhen(true)] out EntityUid? result)
         {
             result = null;
             if (!_container.TryGetContainer(ent, name, out var maybeSlot))
                 return false;
 
-            result = (maybeSlot as ContainerSlot)?.ContainedEntity;
+            result = maybeSlot.ContainedEntities.FirstOrNull();
             return result is not null;
         }
 
