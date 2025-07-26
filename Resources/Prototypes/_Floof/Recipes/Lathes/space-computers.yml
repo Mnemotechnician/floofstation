@@ -1,0 +1,29 @@
+- type: latheRecipe
+  id: ComputerCPUBasic
+  result: ComputerCPUBasic
+  category: Parts
+  completetime: 3
+  materials:
+    Steel: 200
+    Plastic: 200
+    Glass: 300
+
+- type: latheRecipe
+  id: ComputerMemoryBasic
+  result: ComputerMemoryBasic
+  category: Parts
+  completetime: 3
+  materials:
+    Steel: 300
+    Plastic: 100
+    Glass: 300
+
+- type: latheRecipe
+  id: ComputerHardDiskBasic
+  result: ComputerHardDiskBasic
+  category: Parts
+  completetime: 3
+  materials:
+    Steel: 500
+    Plastic: 200
+    Glass: 50

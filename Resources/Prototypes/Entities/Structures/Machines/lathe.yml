@@ -282,7 +282,12 @@
     - LargeBeaker
     - Dropper
     - ClothingEyesGlassesChemical
+    # Floofstation section start
     - ClothingOuterShadowkinRestraints
+    - ComputerCPUBasic
+    - ComputerMemoryBasic
+    - ComputerHardDiskBasic
+    # Floofstation section end
     dynamicRecipes:
       - PowerDrill
       - MiningDrill
@@ -1969,7 +1974,7 @@
       # - PlushieFeistyBartender
       # - PlushieCoolVulp
       # - PlushieNoticeableSecurityOfficer
-      - PlushieAvaliHOP 
+      - PlushieAvaliHOP
       - PlushieKoboldCefJustice
       #Floof Plushies - End
   - type: EmagLatheRecipes

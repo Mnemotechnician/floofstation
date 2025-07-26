@@ -21,7 +21,7 @@
 - type: entity
   id: ComputerCPUBasic
   parent: ComputerComponentBase
-  name: Computer CPU
+  name: basic CPU
   description: A central processing unit.
   components:
   - type: Sprite
@@ -38,7 +38,7 @@
 - type: entity
   id: ComputerMemoryBasic
   parent: ComputerComponentBase
-  name: Computer RAM stick
+  name: basic RAM stick
   description: A protogen's favorite snack.
   components:
   - type: Sprite
@@ -54,7 +54,7 @@
 - type: entity
   id: ComputerHardDiskBasic
   parent: ComputerComponentBase
-  name: Computer hard disk
+  name: basic hard disk
   description: Where all your failed science experiments are stored.
   components:
   - type: Sprite
