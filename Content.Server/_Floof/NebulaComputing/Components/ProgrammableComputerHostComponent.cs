@@ -1,5 +1,6 @@
 using Content.Server._Floof.NebulaComputing.Systems;
 using Content.Server._Floof.NebulaComputing.VirtualCPU;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 using Content.Shared._Floof.NebulaComputing.UI;
 using Content.Shared._Floof.NebulaComputing.Util;
 using Robust.Shared.GameStates;
@@ -30,9 +31,6 @@ public sealed partial class ProgrammableComputerHostComponent : Component
     public VirtualCPUECSIOProvider? IOProvider;
 
     // Shorthands
-    [ViewVariables]
-    public CPUMemoryCell[]? CPUStackData => CPU?.Comp2.StackData;
-
     [ViewVariables]
     public CPUMemoryCell[]? MemoryData => Memory?.Comp.RandomAccessData;
 

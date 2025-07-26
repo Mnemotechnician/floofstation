@@ -28,9 +28,6 @@
     state: cpu-basic
   - type: CPU
     instructionRate: 1000 # Per second
-  - type: Memory
-    capacity: 1000 # In bytes.
-    kind: CPUOperationStack
   - type: Tag
     tags: [ComputerCPU]
 

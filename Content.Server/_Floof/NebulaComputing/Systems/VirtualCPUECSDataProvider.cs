@@ -1,5 +1,5 @@
 using Content.Server._Floof.NebulaComputing.Components;
-using Content.Server._Floof.NebulaComputing.VirtualCPU;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 
 
 namespace Content.Server._Floof.NebulaComputing.Systems;
@@ -10,17 +10,17 @@ public sealed class VirtualCPUECSDataProvider(ProgrammableComputerHostComponent 
     public ProgrammableComputerHostComponent Component => comp;
     public CPUMemoryCell[]? Memory => Component.MemoryData;
 
-    public override CPUMemoryCell GetValue(int address)
+    public override CPUMemoryCell GetValue(uint address)
     {
-        if (address < 0 || Memory is not {} mem || address >= mem.Length)
+        if (Memory is not {} mem || address >= mem.Length)
             throw new CPUExecutionException(CPUErrorCode.SegmentationFault);
 
         return mem[address];
     }
 
-    public override void SetValue(int address, CPUMemoryCell value)
+    public override void SetValue(uint address, CPUMemoryCell value)
     {
-        if (address < 0 || Memory is not {} mem || address >= mem.Length)
+        if (Memory is not {} mem || address >= mem.Length)
             throw new CPUExecutionException(CPUErrorCode.SegmentationFault);
 
         mem[address] = value;

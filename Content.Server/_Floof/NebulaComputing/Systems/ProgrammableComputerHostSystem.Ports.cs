@@ -6,6 +6,7 @@ using Content.Server.DeviceNetwork;
 using Content.Server.DeviceNetwork.Systems;
 using Content.Server._Floof.NebulaComputing.Components;
 using Content.Server._Floof.NebulaComputing.VirtualCPU;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 using Content.Shared.DeviceLinking;
 using Content.Shared.DeviceNetwork;
 using Robust.Shared.Timing;

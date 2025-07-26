@@ -1,4 +1,5 @@
 using System.Text;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 
 
 namespace Content.Server._Floof.NebulaComputing.VirtualCPU.Assembly;
@@ -8,6 +9,7 @@ using IS = InstructionSet;
 // Shush
 // ReSharper disable BadControlBracesLineBreaks
 // ReSharper disable MissingLinebreak
+// TODO PENDING REWRITE
 
 /// <summary>
 ///    Compiles assembly code into the binary format.
@@ -15,11 +17,11 @@ using IS = InstructionSet;
 /// </summary>
 public sealed class VCPUAssemblyCompiler
 {
-    private static readonly Dictionary<string, int> SimpleInstructions = new()
+    private static readonly Dictionary<string, byte> SimpleInstructions = new()
     {
-        {"nop",     (int) IS.NOP},
-        {"halt",    (int) IS.HALT},
-        {"invalid", (int) IS.INVALID}
+        {"nop",     (byte) IS.Nop},
+        {"halt",    (byte) IS.Halt},
+        {"invalid", (byte) IS.Invalid}
     };
 
     private string _input = default!;
@@ -32,7 +34,7 @@ public sealed class VCPUAssemblyCompiler
     private List<(int addressIntegerPosition, string targetLabel)> _labelledAddresses = new();
 
     /// <summary>Address at which the next written byte will appear. </summary>
-    private int CurrentAddress => _output.Count;
+    private uint CurrentAddress => (uint) _output.Count;
     private string? _startSectionName;
     private Section? CurrentSection = null;
 
@@ -80,9 +82,9 @@ public sealed class VCPUAssemblyCompiler
             // Jump to label is only possible within the same section. Jump to section is allowed everywhere.
             // TODO: disabled. Find a way to support referencing data labels everywhere?
             if (_labels.Find(it => it.Name == label/* && it.inSection == CurrentSection*/) is { } targetLabel)
-                _output[jumpAddr] = targetLabel.StartAddress;
+                _output[jumpAddr] = (int) targetLabel.StartAddress;
             else if (_sections.Find(it => it.Name == label) is { } targetSection)
-                _output[jumpAddr] = targetSection.StartAddress;
+                _output[jumpAddr] = (int) targetSection.StartAddress;
             else
                 Error($"Label {label} does not exist", jumpAddr);
         }
@@ -128,7 +130,7 @@ public sealed class VCPUAssemblyCompiler
             // Output invalid instructions before and after the section
             // This is to ensure the executor will never reach the end of section
             // and immediately start executing the next section (which may be a procedure etc)
-            Write((int) IS.INVALID);
+            Write((int) IS.SectionBoundary);
 
             var section = new Section(name, CurrentAddress);
             _sections.Add(section);
@@ -148,7 +150,7 @@ public sealed class VCPUAssemblyCompiler
                 break;
             }
 
-            Write((int) IS.INVALID);
+            Write((int) IS.SectionBoundary);
 
             return;
         } else if (Match(".start")) {
@@ -209,7 +211,7 @@ public sealed class VCPUAssemblyCompiler
         // Binary operations
         if (Enum.TryParse<BinaryOperationType>(name, true, out var operationType))
         {
-            WriteInstruction(IS.BINARY);
+            WriteInstruction(IS.Binary);
             Write((int) OperandTypeOrError());
             Write((int) operationType);
             EndOfStatement();
@@ -224,11 +226,7 @@ public sealed class VCPUAssemblyCompiler
             case "drop":
             case "dup":
             {
-                if (Integer() is not { } addr)
-                    addr = 0; // Assuming 0 is the default. From IO it's the console port, for drop/dup it's the top of the stack.
-
-                WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
-                Write(addr);
+                // TODO REWRITE
                 break;
             }
 
@@ -238,20 +236,14 @@ public sealed class VCPUAssemblyCompiler
             case "store":
             case "call":
             {
-                WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
-                Write(LabelOrAddress());
-
+                // TODO REWRITE
                 break;
             }
 
             case "jmp":
             case "jmpc":
             {
-                WriteInstruction(Enum.Parse<IS>(name.ToUpper()));
-                Write(LabelOrAddress());
-                if (name == "jmpc")
-                    Write((int) JumpTypeOrError());
-
+                // TODO REWRITE
                 break;
             }
 
@@ -259,32 +251,33 @@ public sealed class VCPUAssemblyCompiler
             case "char":
             case "float":
             {
+                // TODO REWRITE
                 // Optional label
-                if (Identifier() is {} label)
-                    _labels.Add(new Label(label, CurrentAddress, CurrentSection));
-
-                // First initializer always exists, rest way or may not
-                // ARRAY SUPPORT HOLY SHIT
-                do {
-                    if (name == "int") {
-                        var init = CPUMemoryCell.FromInt32(Integer() ?? 0);
-                        Write(init.Int32);
-                    } else if (name == "char") {
-                        // This one supports both strings and single characters
-                        if (AnyString() is { } str) {
-                            foreach (var c in str)
-                                Write(c);
-                        } else if (Integer() is {} c) {
-                            Write(c);
-                        } else {
-                            Error("Expected a string or integer initializer");
-                            str = "???";
-                        }
-                    } else {
-                        var init = CPUMemoryCell.FromSingle(Float() ?? 0f);
-                        Write(init.Int32);
-                    }
-                } while (Match(","));
+                // if (Identifier() is {} label)
+                //     _labels.Add(new Label(label, CurrentAddress, CurrentSection));
+                //
+                // // First initializer always exists, rest way or may not
+                // // ARRAY SUPPORT HOLY SHIT
+                // do {
+                //     if (name == "int") {
+                //         var init = CPUMemoryCell.FromInt32(Integer() ?? 0);
+                //         Write(init.Int32);
+                //     } else if (name == "char") {
+                //         // This one supports both strings and single characters
+                //         if (AnyString() is { } str) {
+                //             foreach (var c in str)
+                //                 Write(c);
+                //         } else if (Integer() is {} c) {
+                //             Write(c);
+                //         } else {
+                //             Error("Expected a string or integer initializer");
+                //             str = "???";
+                //         }
+                //     } else {
+                //         var init = CPUMemoryCell.FromSingle(Float() ?? 0f);
+                //         Write(init.Int32);
+                //     }
+                // } while (Match(","));
 
                 break;
             }
@@ -296,9 +289,7 @@ public sealed class VCPUAssemblyCompiler
                     numAfter = Integer() ?? 0;
                 }
 
-                WriteInstruction(IS.RET);
-                Write(numBefore);
-                Write(numAfter);
+                // TODO REWRITE
 
                 break;
             }
@@ -329,7 +320,7 @@ public sealed class VCPUAssemblyCompiler
             return constant;
 
         if (Identifier() is { } label) {
-            _labelledAddresses.Add((CurrentAddress, label));
+            _labelledAddresses.Add(((int) CurrentAddress, label));
             return int.MaxValue;
         }
 
@@ -485,7 +476,7 @@ public sealed class VCPUAssemblyCompiler
         if (Identifier() is not { } name || !Enum.TryParse<JumpType>(name, true, out var value))
         {
             Error("Expected a jump type");
-            return JumpType.Zero; // Error recovery
+            return JumpType.Equal; // Error recovery
         }
 
         return value;
@@ -569,10 +560,7 @@ public sealed class VCPUAssemblyCompiler
 
     private void WriteInstruction(IS instruction)
     {
-        int value = (int) instruction;
-        if (_inPSPInstruction)
-            value |= (int) IS.PRESERVE_STACK_MASK;
-
+        byte value = (byte) instruction;
         Write(value);
     }
 
@@ -587,25 +575,25 @@ public sealed class VCPUAssemblyCompiler
         _errors.Add($"{message} at {line}:{pos}.");
     }
 
-    private class Section(string name, int startAddress)
+    private class Section(string name, uint startAddress)
     {
         public string Name = name;
-        public int StartAddress = startAddress;
+        public uint StartAddress = startAddress;
     }
 
-    private class Label(string name, int startAddress, Section? inSection)
+    private class Label(string name, uint startAddress, Section? inSection)
     {
         public string Name = name;
-        public int StartAddress = startAddress;
+        public uint StartAddress = startAddress;
         public Section? inSection = inSection;
     }
 
-    public record struct Result(bool success, int[]? code, int entryPoint)
+    public record struct Result(bool success,int[]? code, uint entryPoint)
     {
         public bool success = success;
         public int[]? code = code;
-        public int entryPoint = entryPoint;
+        public uint entryPoint = entryPoint;
 
-        public static Result Failure => new(false, null, -1);
+        public static Result Failure => new(false, null, 0);
     }
 }

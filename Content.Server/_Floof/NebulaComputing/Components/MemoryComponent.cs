@@ -1,4 +1,5 @@
 using Content.Server._Floof.NebulaComputing.VirtualCPU;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
@@ -25,7 +26,7 @@ public sealed partial class MemoryComponent : Component
     ///     The actual memory of the computer. Created at runtime. Which fields are initialized depends on the <see cref="Kind"/>.
     /// </summary>
     [NonSerialized]
-    public CPUMemoryCell[]? StackData, RandomAccessData, PersistentData;
+    public CPUMemoryCell[]? RandomAccessData, PersistentData;
 }
 
 [Serializable, Flags]
@@ -42,11 +43,7 @@ public enum MemoryType : int
     Persistent = 2,
 
     // ReSharper disable once InconsistentNaming
-    /// <summary>
-    ///     The operation stack, where numbers and other values are pushed and popped.
-    ///     This is a cheap replacement for actual registers and shit.
-    ///     Because I can't be bothered to write a compiler that respects registers and all that.
-    /// </summary>
+    /// <summary>Unused.</summary>
     CPUOperationStack = 4,
 
     /// <summary>

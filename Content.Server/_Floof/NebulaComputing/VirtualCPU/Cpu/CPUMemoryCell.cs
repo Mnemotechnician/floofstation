@@ -1,8 +1,7 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
-namespace Content.Server._Floof.NebulaComputing.VirtualCPU;
+namespace Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 
 /// <summary>
 ///    A 4-byte register whose value can be interpreted as 32-bit integer, 32-bit float, or a character.
@@ -25,10 +24,13 @@ public struct CPUMemoryCell
     /// <remarks>Use with caution, may lose some bits of data.</remarks>
     public char Char => (char) Int32;
 
+    public CPUInstructionCell Instruction => CPUInstructionCell.FromUInt32(UInt32);
+
     static CPUMemoryCell()
     {
         var size = Marshal.SizeOf<CPUMemoryCell>();
-        if (size != sizeof(int))
+        var size2 = Marshal.SizeOf<CPUInstructionCell>();
+        if (size != sizeof(int) || size2 != size)
             Logger.Error("CPU memory cell size constraint is violated. This lead to undefined behavior and may crash the game.");
     }
 

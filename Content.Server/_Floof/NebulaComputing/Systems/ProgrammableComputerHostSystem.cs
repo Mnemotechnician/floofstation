@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Content.Server._Floof.NebulaComputing.Components;
 using Content.Server._Floof.NebulaComputing.VirtualCPU;
 using Content.Server._Floof.NebulaComputing.VirtualCPU.Assembly;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 using Content.Server.GameTicking;
 using Content.Shared.GameTicking;
 using Content.Shared.Popups;
@@ -86,9 +87,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
         if (ent.Comp.CPU?.Comp1?.Executor is {} executor)
             _executorThread.RemoveProcessedCPU(executor);
 
-        // Reset CPU stack as well. RAM is currently unaffected because there's no way to write programs to the disk.
-        if (ent.Comp.CPU?.Comp2?.StackData is {} stack)
-            Nullify(stack);
+        // RAM is currently unaffected because there's no way to write programs to the disk.
         // if (ent.Comp.Memory?.Comp?.RandomAccessData is { } memory)
         //     Nullify(memory);
     }
@@ -176,19 +175,14 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
 
         // Step 4. Reset the memory if requested or necessary
         ref CPUMemoryCell[]?
-            cpuStack = ref ent.Comp.CPU.Value.Comp2.StackData,
             memory = ref ent.Comp.Memory.Value.Comp.RandomAccessData,
             storage = ref ent.Comp.Storage.Value.Comp.PersistentData;
 
         ref var executor = ref ent.Comp.CPU.Value.Comp1.Executor;
         var firstRun = !ent.Comp.SetupDone;
 
-        if (resetNonPersistent || firstRun || cpuStack is null || memory is null)
-        {
-            // The garbage collector will take care of the rest
-            cpuStack = new CPUMemoryCell[ent.Comp.CPU.Value.Comp2.Capacity];
+        if (resetNonPersistent || firstRun || memory is null)
             memory = new CPUMemoryCell[ent.Comp.Memory.Value.Comp.Capacity];
-        }
 
         ent.Comp.IOProvider ??= new VirtualCPUECSIOProvider(ent, this);
 
@@ -200,8 +194,7 @@ public sealed partial class ProgrammableComputerHostSystem : EntitySystem
             firstRun = true;
             executor = new(
                 new VirtualCPUECSDataProvider(ent.Comp),
-                ent.Comp.IOProvider,
-                cpuStack);
+                ent.Comp.IOProvider);
             executor.Halted = true;
             executor.InstructionRate = ent.Comp.CPU.Value.Comp1.InstructionRate;
             executor.ErrorHandler += (code, pos) =>

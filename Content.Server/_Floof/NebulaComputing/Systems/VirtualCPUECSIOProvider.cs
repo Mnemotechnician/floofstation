@@ -1,5 +1,6 @@
 using Content.Server._Floof.NebulaComputing.Components;
 using Content.Server._Floof.NebulaComputing.VirtualCPU;
+using Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 using Content.Shared._Floof.NebulaComputing.UI;
 using Content.Shared._Floof.NebulaComputing.Util;
 

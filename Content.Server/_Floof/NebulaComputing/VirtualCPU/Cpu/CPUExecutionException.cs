@@ -1,4 +1,4 @@
-namespace Content.Server._Floof.NebulaComputing.VirtualCPU;
+namespace Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 
 
 // ReSharper disable once InconsistentNaming   shut up!!!!
@@ -17,5 +17,8 @@ public enum CPUErrorCode : byte
     StackUnderflow     = 0x04,
     DivisionByZero     = 0x05,
     InvalidType        = 0x06,
-    InvalidPort        = 0x07
+    InvalidPort        = 0x07,
+    // Hit a section boundary, a subtype of IllegalInstruction
+    SectionBoundary    = 0x08,
+    IllegalRegister    = 0x09
 }

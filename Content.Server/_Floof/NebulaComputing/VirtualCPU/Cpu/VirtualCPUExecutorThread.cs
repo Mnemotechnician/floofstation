@@ -4,7 +4,7 @@ using Content.Server._Floof.NebulaComputing.VirtualCPU.Util;
 using ThreadState = System.Threading.ThreadState;
 
 
-namespace Content.Server._Floof.NebulaComputing.VirtualCPU;
+namespace Content.Server._Floof.NebulaComputing.VirtualCPU.Cpu;
 
 
 public sealed class VirtualCPUExecutorThread
