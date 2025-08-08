@@ -493,6 +493,8 @@
     - SpaceHeaterMachineCircuitBoard
     - StationAnchorCircuitboard
     - CutterMachineCircuitboard
+    - FaxMachineCircuitboard # Vulp
+    - HolopadMachineCircuitboard # Vulp
     dynamicRecipes:
       - ThermomachineFreezerMachineCircuitBoard
       - HellfireFreezerMachineCircuitBoard
@@ -1974,6 +1976,10 @@
       # - PlushieNoticeableSecurityOfficer
       - PlushieAvaliHOP
       - PlushieKoboldCefJustice
+      - PlushieSlimeBartender
+      - PlushieGrumpyQuartermaster
+      - PlushieHardcoreDj
+      - PlushieHos
       #Floof Plushies - End
   - type: EmagLatheRecipes
     emagStaticRecipes:
