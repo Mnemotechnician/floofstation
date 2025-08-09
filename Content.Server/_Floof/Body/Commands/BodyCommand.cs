@@ -13,10 +13,9 @@ using Robust.Shared.Toolshed;
 namespace Content.Server._Floof.Body.Commands;
 
 [ToolshedCommand, AdminCommand(AdminFlags.Admin)]
-sealed class AddBodyCommand : ToolshedCommand
+sealed class BodyCommand : ToolshedCommand
 {
-    [ValidatePrototypeId<EntityPrototype>]
-    public const string DefaultBodyPrototype = "Adminbus";
+    public static readonly ProtoId<BodyPrototype> DefaultBodyPrototype = "Adminbus";
 
     [CommandImplementation("default")]
     public EntityUid AddDefault(
