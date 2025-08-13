@@ -31,8 +31,8 @@
   - type: Gun
     fireRate: 5
     minAngle: 3
-    maxAngle: 10
-    angleIncrease: 2
+    maxAngle: 20
+    angleIncrease: 5
     angleDecay: 2 # Must shoot 1 shot/second to achieve full accuracy
     availableModes:
     - SemiAuto
@@ -62,7 +62,7 @@
   - type: Gun
     minAngle: 3
     maxAngle: 10
-    angleIncrease: 3
+    angleIncrease: 5
     angleDecay: 1
 
 - type: entity
@@ -80,4 +80,21 @@
     maxAngle: 10
     angleIncrease: 3
     angleDecay: 1
+
+- type: entity
+  id: WeaponBorgAdvancedLaser
+  parent: WeaponAdvancedLaser
+  name: Cyber-laser
+  suffix: Robot
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Gun
+    fireRate: 1.2
+    minAngle: 3
+    maxAngle: 20
+    angleIncrease: 5
+    angleDecay: 1
+  - type: HitscanBatteryAmmoProvider
+    proto: RedLaser # Less DPS than the advanced laser and less shots
+    fireCost: 200
 
