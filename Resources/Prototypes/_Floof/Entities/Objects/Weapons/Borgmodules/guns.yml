@@ -30,6 +30,10 @@
       map: ["enum.GunVisualLayers.Base"]
   - type: Gun
     fireRate: 5
+    minAngle: 3
+    maxAngle: 10
+    angleIncrease: 2
+    angleDecay: 2 # Must shoot 1 shot/second to achieve full accuracy
     availableModes:
     - SemiAuto
     soundGunshot:
@@ -55,6 +59,11 @@
   - type: BatterySelfRecharger
     autoRecharge: true
     autoRechargeRate: 30
+  - type: Gun
+    minAngle: 3
+    maxAngle: 10
+    angleIncrease: 3
+    angleDecay: 1
 
 - type: entity
   parent: WeaponPulseRifle
@@ -66,4 +75,9 @@
   - type: BatterySelfRecharger
     autoRecharge: true
     autoRechargeRate: 30
+  - type: Gun
+    minAngle: 3
+    maxAngle: 10
+    angleIncrease: 3
+    angleDecay: 1
 
